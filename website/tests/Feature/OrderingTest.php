@@ -57,10 +57,10 @@ class OrderingTest extends TestCase
             ],
         ])->assertCreated()->json();
 
-        // the extra yogurt (2 AED) is added to the banquet price
-        $this->assertEquals(73 * 2 + 1225 + 2, $res['order']['total']);
+        // extra yogurt and chutney (2 AED each) are added to the banquet price
+        $this->assertEquals(73 * 2 + 1225 + 2 + 2, $res['order']['total']);
         $this->assertStringContainsString(rawurlencode('نوع الرز: مكس (نوعين)'), $res['redirect']);
-        $this->assertStringContainsString(rawurlencode('إضافات: شطني إضافي، روب إضافي'), $res['redirect']);
+        $this->assertStringContainsString(rawurlencode('إضافات: شتني إضافي، روب إضافي'), $res['redirect']);
         $this->assertStringStartsWith('https://wa.me/971581404800?text=', $res['redirect']);
         $this->assertStringContainsString(rawurlencode('ذبيحة مندي - تيس'), $res['redirect']);
     }
