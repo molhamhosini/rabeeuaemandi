@@ -142,10 +142,18 @@ class Branch {
 class AppConfig {
   final bool cardPayment;
   final String instagram;
-  AppConfig(this.cardPayment, this.instagram);
+  /// Ordering hours in Abu Dhabi time: first and last choice ("12:00", "23:30"), step in minutes,
+  /// days banquets can be booked ahead, and minimum minutes for an ordinary meal.
+  final String open, last;
+  final int step, days, meal;
+  AppConfig(this.cardPayment, this.instagram, {this.open = '12:00', this.last = '23:30', this.step = 30, this.days = 30, this.meal = 30});
 
-  factory AppConfig.fromJson(Map<String, dynamic> j) =>
-      AppConfig(j['card_payment'] == true, '${j['instagram'] ?? ''}');
+  factory AppConfig.fromJson(Map<String, dynamic> j) {
+    final h = (j['hours'] as Map?) ?? {};
+    return AppConfig(j['card_payment'] == true, '${j['instagram'] ?? ''}',
+        open: '${h['open'] ?? '12:00'}', last: '${h['last'] ?? '23:30'}',
+        step: (h['step'] as num?)?.toInt() ?? 30, days: (h['days'] as num?)?.toInt() ?? 30, meal: (h['meal'] as num?)?.toInt() ?? 30);
+  }
 }
 
 class PlacedOrder {

@@ -30,8 +30,13 @@
           <label data-asap><input type="radio" name="when" value="now" checked><span><b>{{ __('site.schedule.asap') }}</b><small>{{ __('site.schedule.asap_sub') }}</small></span></label>
           <label><input type="radio" name="when" value="later"><span><b>{{ __('site.schedule.later') }}</b><small>{{ __('site.schedule.later_sub') }}</small></span></label>
         </div>
+        <p class="hours-note">{{ \App\Services\OrderService::hoursText() }}</p>
         <p class="lead-note" data-lead-note hidden></p>
-        <div class="field" data-when-at hidden style="margin-top:14px"><label for="w">{{ __('site.schedule.at') }}</label><input id="w" type="datetime-local" name="scheduled_at" step="900" dir="ltr"></div>
+        <div class="when-pick" data-when-at hidden>
+          <div class="field" data-day-f><label for="wd">{{ __('site.schedule.day') }}</label><select id="wd" data-day></select></div>
+          <div class="field"><label for="wt">{{ __('site.schedule.time') }}</label><select id="wt" data-time></select></div>
+          <input type="hidden" name="scheduled_at">
+        </div>
       </div>
       <div class="card">
         <h3>{{ __('site.checkout.payment') }}</h3>

@@ -17,6 +17,13 @@ class OrderingTest extends TestCase
 
     protected $seed = true;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // a fixed Saturday, 2 PM in Abu Dhabi: inside ordering hours (12:00 to 23:30)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-11-28 14:00', 'Asia/Dubai'));
+    }
+
     public function test_public_pages_render_in_both_languages(): void
     {
         foreach (['/', '/menu', '/branches', '/checkout'] as $url) {
@@ -80,6 +87,8 @@ class OrderingTest extends TestCase
 
     public function test_banquet_must_be_booked_three_hours_ahead(): void
     {
+        // many orders in a row from one client would hit the order rate limit
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         $banquet = Item::where('name_en', 'Mandi')->first();
         $groups = $banquet->addonGroups()->with('addons')->get();
         $ids = [$groups->firstWhere('name_en', 'Rice type')->addons[0]->id, $groups->firstWhere('name_en', 'Serving')->addons[0]->id];
@@ -90,19 +99,30 @@ class OrderingTest extends TestCase
                 ? ['item_id' => $item->id, 'quantity' => 1]
                 : ['item_id' => $banquet->id, 'option_id' => $banquet->options()->value('id'), 'quantity' => 1, 'addon_ids' => $ids]],
         ]));
-        $at = fn (int $minutes) => now('Asia/Dubai')->addMinutes($minutes)->format('Y-m-d\TH:i');
+        // now is Saturday 28 November, 14:00 in Abu Dhabi
+        $order(null)->assertStatus(422)->assertJsonValidationErrors('scheduled_at');            // banquet "as soon as possible"
+        $order('2026-11-28T16:00')->assertStatus(422)->assertJsonValidationErrors('scheduled_at'); // only 2 hours ahead
+        $order('2026-11-28T17:15')->assertStatus(422);                                          // not one of the choices
+        $order('2026-11-29T09:00')->assertStatus(422);                                          // before opening
+        $order('2027-01-20T13:00')->assertStatus(422);                                          // too far ahead
+        $res = $order('2026-11-28T17:00')->assertCreated()->json();
+        $this->assertSame('2026-11-28T13:00:00+00:00', $res['order']['scheduled_at']);
+        $order('2026-12-02T20:30')->assertCreated();                                            // banquets can be booked days ahead
+        $cook = Item::whereHas('category', fn ($q) => $q->where('slug', 'cooking-service'))->first();
+        $order(null, $cook)->assertStatus(422);                                                 // cooking service needs notice too
 
-        $order(null)->assertStatus(422)->assertJsonValidationErrors('scheduled_at');   // banquet "as soon as possible"
-        $order($at(120))->assertStatus(422)->assertJsonValidationErrors('scheduled_at'); // only 2 hours ahead
-        $order($at(60 * 24 * 40))->assertStatus(422);                                    // too far ahead
-        $res = $order($at(200))->assertCreated()->json();
-        $this->assertEqualsWithDelta(now()->addMinutes(200)->timestamp, \Carbon\Carbon::parse($res['order']['scheduled_at'])->timestamp, 60);
-
-        // a normal plate can still be ordered right away, or later today
+        // ordinary meals: right away, or later the same day with at least 30 minutes
         $plate = Item::where('name_en', 'Mandi Lamb')->first();
         $this->assertNull($order(null, $plate)->assertCreated()->json('order.scheduled_at'));
-        $order($at(45), $plate)->assertCreated();
-        $order($at(-60), $plate)->assertStatus(422);                                     // in the past
+        $order('2026-11-28T14:30', $plate)->assertCreated();
+        $order('2026-11-28T13:30', $plate)->assertStatus(422);                                 // in the past
+        $order('2026-11-29T14:00', $plate)->assertStatus(422);                                 // another day
+        $order('2026-11-28T23:30', $plate)->assertCreated();                                   // last choice of the day
+        $order('2026-11-28T23:45', $plate)->assertStatus(422);                                 // after hours
+
+        // outside ordering hours there is no "as soon as possible"
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-11-28 23:50', 'Asia/Dubai'));
+        $order(null, $plate)->assertStatus(422);
     }
 
     public function test_banquet_needs_rice_and_serving_and_rejects_foreign_addons(): void

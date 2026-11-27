@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
+import '../models.dart';
 import '../strings.dart';
 import '../theme.dart';
 import 'order_screen.dart';
@@ -107,11 +108,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return DateTime(u.year, u.month, u.day, u.hour, u.minute);
   }
 
-  /// Earliest allowed time, rounded up to the next quarter hour.
-  DateTime _earliest(int lead) {
-    final t = _abuDhabiNow().add(Duration(hours: lead));
-    final extra = (15 - t.minute % 15) % 15;
-    return t.add(Duration(minutes: extra));
+  static int _mins(String hm) {
+    final p = hm.split(':');
+    return int.parse(p[0]) * 60 + int.parse(p[1]);
+  }
+
+  /// The choices: each day with its times. Ordinary meals: today only, at least [AppConfig.meal]
+  /// minutes ahead. Banquets and the cooking service: [lead] hours ahead, on any of the next days.
+  List<(DateTime, List<DateTime>)> _days(AppConfig c, int lead) {
+    final now = _abuDhabiNow();
+    final earliest = now.add(Duration(minutes: (lead > 0 ? lead * 60 : c.meal) - 5));
+    final out = <(DateTime, List<DateTime>)>[];
+    for (var i = 0; i <= (lead > 0 ? c.days : 0); i++) {
+      final d = DateTime(now.year, now.month, now.day + i);
+      final slots = <DateTime>[
+        for (var m = _mins(c.open); m <= _mins(c.last); m += c.step)
+          if (!d.add(Duration(minutes: m)).isBefore(earliest)) d.add(Duration(minutes: m)),
+      ];
+      if (slots.isNotEmpty) out.add((d, slots));
+    }
+    return out;
+  }
+
+  bool _openNow(AppConfig c) {
+    final n = _abuDhabiNow();
+    final m = n.hour * 60 + n.minute;
+    return m >= _mins(c.open) && m <= _mins(c.last);
   }
 
   String _fmt(DateTime t) {
@@ -119,54 +141,78 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return '${t.year}-${two(t.month)}-${two(t.day)}T${two(t.hour)}:${two(t.minute)}';
   }
 
+  String _time(DateTime t) => MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(t));
+
   Widget _whenCard(AppState s, String l) {
+    final c = s.config;
     final lead = s.leadHours;
-    final later = _later || lead > 0;
-    final earliest = _earliest(lead);
-    if (later && (_at == null || _at!.isBefore(earliest))) _at = earliest;
-    final h = TimeOfDay.fromDateTime(_at ?? earliest);
+    final days = _days(c, lead);
+    final noAsap = lead > 0 || !_openNow(c);
+    final later = _later || noAsap;
+    var dayIdx = 0;
+    if (_at != null) {
+      final i = days.indexWhere((d) => d.$2.contains(_at));
+      if (i >= 0) {
+        dayIdx = i;
+      } else {
+        _at = null;
+      }
+    }
+    if (later && _at == null && days.isNotEmpty) _at = days.first.$2.first;
+    const week = {'ar': ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'], 'en': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']};
+    final now = _abuDhabiNow();
+    String dayName(DateTime d) {
+      final diff = DateTime(d.year, d.month, d.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+      if (diff == 0) return tr('today', l);
+      if (diff == 1) return tr('tomorrow', l);
+      return '${week[l]![d.weekday - 1]} ${d.day}/${d.month}';
+    }
+
+    final noteText = days.isEmpty ? tr('closed_today', l) : (lead > 0 ? tr('lead_note', l).replaceAll(':h', '$lead') : null);
     return _Card(title: tr('when', l), children: [
-      _Choice(selected: !later, enabled: lead == 0, title: tr('asap', l), subtitle: tr('asap_sub', l), onTap: () => setState(() => _later = false)),
+      _Choice(selected: !later, enabled: !noAsap, title: tr('asap', l), subtitle: tr('asap_sub', l), onTap: () => setState(() => _later = false)),
       _Choice(selected: later, title: tr('later', l), subtitle: tr('pick_time', l), onTap: () => setState(() => _later = true)),
-      if (lead > 0)
+      Text(tr('hours_note', l).replaceAll(':o', _time(DateTime(2000, 1, 1, _mins(c.open) ~/ 60, _mins(c.open) % 60))).replaceAll(':l', _time(DateTime(2000, 1, 1, _mins(c.last) ~/ 60, _mins(c.last) % 60))),
+          style: const TextStyle(color: Brand.muted, fontSize: 13)),
+      const SizedBox(height: 8),
+      if (noteText != null)
         Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: const Color(0xFFFFF3DC), borderRadius: BorderRadius.circular(12), border: Border.all(color: Brand.gold)),
-          child: Text(tr('lead_note', l).replaceAll(':h', '$lead'), style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
+          child: Text(noteText, style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
         ),
-      if (later)
-        OutlinedButton.icon(
-          icon: const Icon(Icons.event_rounded),
-          label: Text('${_at!.day}/${_at!.month}/${_at!.year}  ·  ${MaterialLocalizations.of(context).formatTimeOfDay(h)}'),
-          onPressed: () async {
-            final day = await showDatePicker(
-              context: context,
-              initialDate: _at!,
-              firstDate: DateTime(earliest.year, earliest.month, earliest.day),
-              lastDate: earliest.add(const Duration(days: 30)),
-            );
-            if (day == null || !mounted) return;
-            final time = await showTimePicker(context: context, initialTime: h);
-            if (time == null || !mounted) return;
-            final picked = DateTime(day.year, day.month, day.day, time.hour, time.minute);
-            setState(() {
-              if (picked.isBefore(earliest)) {
-                _at = earliest;
-                _error = tr('too_soon', l).replaceAll(':h', '$lead');
-              } else {
-                _at = picked;
-                _error = null;
-              }
-            });
-          },
-        ),
+      if (later && days.isNotEmpty)
+        Row(children: [
+          if (lead > 0) ...[
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                initialValue: dayIdx,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: tr('day', l)),
+                items: [for (var i = 0; i < days.length; i++) DropdownMenuItem(value: i, child: Text(dayName(days[i].$1)))],
+                onChanged: (i) => setState(() => _at = days[i!].$2.first),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: DropdownButtonFormField<DateTime>(
+              key: ValueKey(dayIdx),
+              initialValue: _at,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: tr('time', l)),
+              items: [for (final t in days[dayIdx].$2) DropdownMenuItem(value: t, child: Text(_time(t)))],
+              onChanged: (t) => setState(() => _at = t),
+            ),
+          ),
+        ]),
     ]);
   }
 
   Future<void> _submit(AppState s) async {
     if (!_form.currentState!.validate() || _branch == null) return;
-    final later = _later || s.leadHours > 0;
+    final later = _later || s.leadHours > 0 || !_openNow(s.config);
     setState(() {
       _busy = true;
       _error = null;

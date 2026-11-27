@@ -15,6 +15,8 @@ class MenuController extends Controller
             'currency' => 'AED',
             'card_payment' => OrderService::cardEnabled(),
             'whatsapp_payment' => true,
+            // ordering hours in Abu Dhabi time, and how far ahead banquets can be booked
+            'hours' => OrderService::hours(),
             'hero_video' => asset('images/brand/hero.mp4'),
             'logo' => asset('images/brand/logo.png'),
             'instagram' => 'https://instagram.com/rabeeemaratmandi',
