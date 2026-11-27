@@ -23,7 +23,7 @@ return [
     'choose_addon' => 'اختر :group لـ :item',
     'bad_addon' => 'اختيارات غير صحيحة لـ :item',
     'optional' => 'اختياري',
-    'choose_many' => 'اختر ما تريد',
+    'choose_many' => 'تقدر تختار أكثر من واحد',
     'choose_one' => 'اختر واحد',
     'required' => 'مطلوب',
     'prices_incl_vat' => 'جميع الأسعار شاملة ضريبة القيمة المضافة',

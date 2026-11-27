@@ -326,3 +326,18 @@ main > .section:last-child{padding-bottom:96px}
 .mnav-b .btn{flex:1;padding:9px 12px;font-size:.92rem}
 .mnav-lang{margin-top:auto;align-self:flex-start;padding:8px 16px;border-radius:999px;border:1px solid rgba(233,207,156,.35);color:var(--gold-3);font-weight:700}
 @media (max-width:820px){.hdr-actions .lang{display:none}}
+
+/* option sheet scrolls as one piece, so the photo moves away and group titles stay in view */
+.sheet{overflow-y:auto;overscroll-behavior:contain}
+.sheet .ph{flex:none}
+.sheet .in{overflow:visible}
+.grp-h{position:sticky;top:0;z-index:2;background:var(--cream);padding:8px 0;margin-bottom:4px}
+.grp-h small{display:block;font-size:.78rem;color:var(--muted);font-weight:400}
+@media (max-width:520px){.sheet .ph{height:150px}}
+.opt.cnt{display:flex;align-items:center;justify-content:space-between}
+.opt.cnt .l .price{margin-inline-start:6px}
+.opt.cnt.on{border-color:var(--gold);background:#FFF8EA}
+/* the dish photo must stay inside its box; it used to spill down over the dish name and first choice title */
+.sheet .ph{overflow:hidden}
+.sheet .ph img{position:absolute;inset:0}
+.sheet .ph .x{z-index:1}

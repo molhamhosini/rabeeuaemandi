@@ -51,16 +51,16 @@ class OrderingTest extends TestCase
             'items' => [
                 ['item_id' => $lamb->id, 'quantity' => 2, 'price' => 1], // client price must be ignored
                 ['item_id' => $banquet->id, 'option_id' => $goat->id, 'quantity' => 1, 'addon_ids' => [
-                    $addon($banquet, 'Mixed (two types)'), $addon($banquet, 'Split over several plates'),
-                    $addon($banquet, 'Extra yogurt'), $addon($banquet, 'Extra chutney'),
+                    $addon($banquet, 'Bukhari'), $addon($banquet, 'Zurbian'), $addon($banquet, 'Split over several plates'),
+                    $addon($banquet, 'Extra yogurt'), $addon($banquet, 'Extra chutney'), $addon($banquet, 'Extra chutney'),
                 ]],
             ],
         ])->assertCreated()->json();
 
-        // extra yogurt and chutney (2 AED each) are added to the banquet price
-        $this->assertEquals(73 * 2 + 1225 + 2 + 2, $res['order']['total']);
-        $this->assertStringContainsString(rawurlencode('نوع الرز: مكس (نوعين)'), $res['redirect']);
-        $this->assertStringContainsString(rawurlencode('إضافات: شتني إضافي، روب إضافي'), $res['redirect']);
+        // two rice types (mixed); 1 yogurt + 2 chutney at 2 AED each are added to the banquet price
+        $this->assertEquals(73 * 2 + 1225 + 2 + 2 * 2, $res['order']['total']);
+        $this->assertStringContainsString(rawurlencode('نوع الرز: بخاري، زربيان'), $res['redirect']);
+        $this->assertStringContainsString(rawurlencode('إضافات: شتني إضافي ×2، روب إضافي'), $res['redirect']);
         $this->assertStringStartsWith('https://wa.me/971581404800?text=', $res['redirect']);
         $this->assertStringContainsString(rawurlencode('ذبيحة مندي - تيس'), $res['redirect']);
     }
@@ -89,7 +89,8 @@ class OrderingTest extends TestCase
         ]);
 
         $order([$serving[0]->id])->assertStatus(422);                                  // no rice type
-        $order([$rice[0]->id, $rice[1]->id, $serving[0]->id])->assertStatus(422);      // two rice types in a pick-one group
+        $order([$rice[0]->id, $serving[0]->id, $serving[1]->id])->assertStatus(422);   // two servings in a pick-one group
+        $order([$rice[0]->id, $rice[0]->id, $serving[0]->id])->assertStatus(422);      // a free choice can't be counted twice
         $foreign = $lamb->addonGroups()->with('addons')->first()->addons[0]->id;
         $order([$rice[0]->id, $serving[0]->id, $foreign])->assertStatus(422);         // choice from another dish
         $order([$rice[0]->id, $serving[1]->id])->assertCreated();
