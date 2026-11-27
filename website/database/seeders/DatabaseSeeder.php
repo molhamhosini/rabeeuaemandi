@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
     /** Extras. Yogurt is priced like "plain yogurt" in drinks; the owner sets the rest from the admin panel. */
     private const EXTRAS = [
-        ['شتني إضافي', 'Extra chutney', 2], ['روب إضافي', 'Extra yogurt', 2], ['سلطة إضافية', 'Extra salad', 0],
+        ['شتني إضافي', 'Extra chutney', 2], ['روب إضافي', 'Extra yogurt', 2], ['سلطة إضافية', 'Extra salad', 16],
     ];
 
     /** Extra choices per menu section: [name_ar, name_en, multiple, required, [[ar, en, price], ...]]. */
