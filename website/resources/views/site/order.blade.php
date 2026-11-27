@@ -7,6 +7,7 @@
     <div class="ok-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
     <h1 style="font-size:1.8rem">{{ __('site.order.thanks') }}</h1>
     <p style="color:var(--muted);margin:6px 0 14px">{{ __('site.order.title') }} <b dir="ltr">#{{ $order->code }}</b> · {{ $en ? $order->branch->name_en : $order->branch->name_ar }}</p>
+    <p class="when-line">{{ __('site.schedule.title') }}: <b>{{ $order->whenText() }}</b></p>
     <p>
       <span class="pill">{{ __('site.order.status') }}: {{ __('site.order.statuses.'.$order->status) }}</span>
       <span class="pill">{{ __('site.order.payment') }}: {{ __('site.order.payments.'.$order->payment_status) }}</span>

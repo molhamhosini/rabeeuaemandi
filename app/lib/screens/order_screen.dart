@@ -54,6 +54,10 @@ class _OrderScreenState extends State<OrderScreen> {
               Chip(label: Text('${tr('status', l)}: ${tr('st_${o['status']}', l)}'), backgroundColor: Brand.sand, side: BorderSide.none),
               Chip(label: Text('${tr('payment', l)}: ${tr('pay_${o['payment_status']}', l)}'), backgroundColor: Brand.sand, side: BorderSide.none),
             ]),
+            if (o['when'] != null) ...[
+              const SizedBox(height: 10),
+              Text('${tr('when', l)}: ${L10nText.fromJson(o['when']).of(l)}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
+            ],
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),

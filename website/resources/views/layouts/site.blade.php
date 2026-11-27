@@ -15,7 +15,7 @@
 <meta property="og:image" content="{{ asset('images/photos/hero-chicken.webp') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=4">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=5">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="{{ $rtl ? 'ar' : 'en' }}">
@@ -109,10 +109,10 @@
 window.SITE = {
   locale: @json(app()->getLocale()),
   aed: @json(__('site.aed')),
-  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), optional: @json(__('site.optional')), required: @json(__('site.required')), chooseOne: @json(__('site.choose_one')), chooseMany: @json(__('site.choose_many')), notes: @json(__('site.item_notes')), sending: @json(__('site.checkout.sending')) },
+  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), optional: @json(__('site.optional')), required: @json(__('site.required')), chooseOne: @json(__('site.choose_one')), chooseMany: @json(__('site.choose_many')), notes: @json(__('site.item_notes')), leadNote: @json(__('site.schedule.lead_note')), sending: @json(__('site.checkout.sending')) },
 };
 </script>
-<script src="{{ asset('js/cart.js') }}?v=4"></script>
+<script src="{{ asset('js/cart.js') }}?v=5"></script>
 @stack('scripts')
 </body>
 </html>

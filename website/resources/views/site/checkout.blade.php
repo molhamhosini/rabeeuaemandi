@@ -24,6 +24,15 @@
         <div class="field" data-address><label for="a">{{ __('site.checkout.address') }}</label><textarea id="a" name="address" rows="2" placeholder="{{ __('site.checkout.address_ph') }}"></textarea></div>
         <div class="field"><label for="o">{{ __('site.checkout.notes') }}</label><textarea id="o" name="notes" rows="2" placeholder="{{ __('site.checkout.notes_ph') }}"></textarea></div>
       </div>
+      <div class="card" data-when>
+        <h3>{{ __('site.schedule.title') }}</h3>
+        <div class="seg">
+          <label data-asap><input type="radio" name="when" value="now" checked><span><b>{{ __('site.schedule.asap') }}</b><small>{{ __('site.schedule.asap_sub') }}</small></span></label>
+          <label><input type="radio" name="when" value="later"><span><b>{{ __('site.schedule.later') }}</b><small>{{ __('site.schedule.later_sub') }}</small></span></label>
+        </div>
+        <p class="lead-note" data-lead-note hidden></p>
+        <div class="field" data-when-at hidden style="margin-top:14px"><label for="w">{{ __('site.schedule.at') }}</label><input id="w" type="datetime-local" name="scheduled_at" step="900" dir="ltr"></div>
+      </div>
       <div class="card">
         <h3>{{ __('site.checkout.payment') }}</h3>
         <div class="seg">

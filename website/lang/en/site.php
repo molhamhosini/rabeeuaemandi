@@ -52,6 +52,14 @@ return [
         'pay_whatsapp' => 'Order via WhatsApp', 'pay_whatsapp_sub' => 'We send your order to the restaurant, pay on delivery',
         'submit_card' => 'Pay now', 'submit_whatsapp' => 'Send order on WhatsApp', 'summary' => 'Order summary', 'sending' => 'Sending...',
     ],
+    'schedule' => [
+        'title' => 'Order time', 'asap' => 'As soon as possible', 'asap_sub' => 'We start as soon as it reaches us',
+        'later' => 'At a set time', 'later_sub' => 'Pick the day and hour', 'at' => 'Day and time',
+        'lead_note' => 'Whole lambs need at least :hours hours of notice, so pick a time :hours hours or more from now.',
+        'required' => 'Your order has a whole lamb, so please pick a time at least :hours hours ahead.',
+        'too_soon' => 'Whole lambs need :hours hours to prepare. Please pick a later time.',
+        'past' => 'That time has passed. Please pick a time ahead.', 'too_far' => 'We take bookings up to 30 days ahead.',
+    ],
     'card_unavailable' => 'Card payment is not available right now',
     'order' => [
         'title' => 'Order', 'thanks' => 'Thank you for your order!', 'paid' => 'Payment received. The kitchen is preparing your order.',

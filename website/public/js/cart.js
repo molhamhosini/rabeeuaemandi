@@ -17,7 +17,7 @@
     if (ex) ex.qty++;
     else cart.push({key, item_id: item.id, option_id: option ? option.id : null, addon_ids: ids, name: item.name,
       option: option ? option.name : null, details: describe(addons),
-      price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, qty: 1});
+      price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, lead: item.lead || 0, qty: 1});
     save(); toast(S.t.added);
   }
 
@@ -153,12 +153,32 @@
   const form = $('[data-checkout]');
   if (form) {
     const addr = $('[data-address]', form);
-    form.addEventListener('change', () => { addr.hidden = $('input[name=fulfillment]:checked', form).value !== 'delivery'; render(); });
+    // when: as soon as possible, or a set time. Banquets need hours of notice, so they must be booked ahead.
+    const whenAt = $('[data-when-at]', form), at = $('input[name=scheduled_at]', form), note = $('[data-lead-note]', form);
+    const asap = $('input[name=when][value=now]', form), later = $('input[name=when][value=later]', form);
+    // "YYYY-MM-DDTHH:MM" in Abu Dhabi time (UTC+4, no daylight saving), whatever the phone's time zone
+    const local = ms => { const q = 15 * 60e3; return new Date(Math.ceil(ms / q) * q + 4 * 3600e3).toISOString().slice(0, 16); };
+    const syncWhen = () => {
+      const lead = Math.max(0, ...cart.map(l => l.lead || 0));
+      asap.disabled = lead > 0;
+      $('[data-asap]', form).classList.toggle('disabled', lead > 0);
+      if (lead > 0 && asap.checked) later.checked = true;
+      note.hidden = !lead;
+      note.textContent = lead ? S.t.leadNote.replaceAll(':hours', lead) : '';
+      whenAt.hidden = !later.checked;
+      at.required = later.checked;
+      at.min = local(Date.now() + lead * 3600e3);
+      if (later.checked && (!at.value || at.value < at.min)) at.value = at.min;
+    };
+    syncWhen();
+    form.addEventListener('change', () => { addr.hidden = $('input[name=fulfillment]:checked', form).value !== 'delivery'; syncWhen(); render(); });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const err = $('[data-err]', form), btn = $('[data-submit]', form);
       err.hidden = true;
       const body = Object.fromEntries(new FormData(form).entries());
+      if (body.when !== 'later') delete body.scheduled_at;
+      delete body.when;
       body.items = cart.map(l => ({item_id: l.item_id, option_id: l.option_id, addon_ids: l.addon_ids || [], quantity: l.qty}));
       const label = btn.textContent; btn.disabled = true; btn.textContent = S.t.sending;
       try {

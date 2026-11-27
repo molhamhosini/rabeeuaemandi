@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
     /** Extra choices per menu section: [name_ar, name_en, multiple, required, [[ar, en, price], ...]]. */
     private function addonGroups(string $category, array $item): array
     {
-        $rice = fn (bool $required) => [$required ? 'نوع الرز' : 'نوع الرز (إذا بدك غير رز الطبق)', $required ? 'Rice type' : 'Rice type (if not the dish\'s own rice)',
+        $rice = fn (bool $required) => ['نوع الرز', 'Rice type',
             true, $required, array_map(fn ($r) => [$r[0], $r[1], 0], self::RICE)];
         $extras = ['إضافات', 'Extras', true, false, self::EXTRAS];
 
@@ -81,6 +81,8 @@ class DatabaseSeeder extends Seeder
             $category = Category::updateOrCreate(['slug' => $c['slug']], [
                 'name_ar' => $c['name_ar'], 'name_en' => $c['name_en'],
                 'note_ar' => $c['note_ar'] ?? null, 'note_en' => $c['note_en'] ?? null, 'sort' => $ci,
+                // whole lambs need to be booked 3 hours ahead
+                'lead_hours' => $c['slug'] === 'banquets' ? 3 : 0,
             ]);
             foreach ($c['items'] as $ii => $i) {
                 $item = $category->items()->updateOrCreate(['name_en' => $i['name_en']], [

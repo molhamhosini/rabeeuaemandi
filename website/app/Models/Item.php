@@ -53,6 +53,7 @@ class Item extends Model
                 'id' => $o->id, 'name' => ['ar' => $o->name_ar, 'en' => $o->name_en], 'price' => (float) $o->price,
             ])->values(),
             'addon_groups' => $this->addonGroups->map->toApi()->values(),
+            'lead_hours' => (int) $this->category?->lead_hours,
         ];
     }
 }

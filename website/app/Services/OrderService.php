@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Item;
 use App\Models\ItemOption;
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -22,6 +23,8 @@ class OrderService
             'fulfillment' => 'required|in:delivery,pickup',
             'address' => 'required_if:fulfillment,delivery|nullable|string|max:300',
             'notes' => 'nullable|string|max:500',
+            // local Abu Dhabi time from the form, e.g. 2026-11-28T19:30; empty = as soon as possible
+            'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
             'payment_method' => 'required|in:card,whatsapp',
             'items' => 'required|array|min:1|max:50',
             'items.*.item_id' => 'required|integer|exists:items,id',
@@ -30,6 +33,31 @@ class OrderService
             'items.*.addon_ids.*' => 'integer',
             'items.*.quantity' => 'required|integer|min:1|max:50',
         ];
+    }
+
+    public const TZ = 'Asia/Dubai';
+
+    /**
+     * Check the wanted time against the notice the dishes need (banquets: 3 hours).
+     * Returns the time in UTC, or null for "as soon as possible".
+     */
+    private function schedule(?string $at, int $lead): ?Carbon
+    {
+        $when = $at ? Carbon::createFromFormat('Y-m-d\TH:i', $at, self::TZ)->utc() : null;
+        if ($lead > 0 && ! $when) {
+            throw ValidationException::withMessages(['scheduled_at' => __('site.schedule.required', ['hours' => $lead])]);
+        }
+        if (! $when) return null;
+        // a few minutes of slack for the time the customer spent on the form
+        if ($when->lt(now()->addHours($lead)->subMinutes(10))) {
+            throw ValidationException::withMessages(['scheduled_at' => $lead > 0
+                ? __('site.schedule.too_soon', ['hours' => $lead])
+                : __('site.schedule.past')]);
+        }
+        if ($when->gt(now()->addDays(30))) {
+            throw ValidationException::withMessages(['scheduled_at' => __('site.schedule.too_far')]);
+        }
+        return $when;
     }
 
     public static function cardEnabled(): bool
@@ -49,8 +77,10 @@ class OrderService
         return DB::transaction(function () use ($data, $branch, $source) {
             $lines = [];
             $subtotal = 0;
+            $lead = 0;
             foreach ($data['items'] as $row) {
-                $item = Item::with('options', 'addonGroups.addons')->where('is_active', true)->findOrFail($row['item_id']);
+                $item = Item::with('options', 'addonGroups.addons', 'category')->where('is_active', true)->findOrFail($row['item_id']);
+                $lead = max($lead, (int) $item->category?->lead_hours);
                 $option = null;
                 if ($item->options->isNotEmpty()) {
                     $option = $item->options->firstWhere('id', (int) ($row['option_id'] ?? 0));
@@ -76,6 +106,7 @@ class OrderService
                 ];
             }
 
+            $scheduled = $this->schedule($data['scheduled_at'] ?? null, $lead);
             $fee = $data['fulfillment'] === 'delivery' ? (float) $branch->delivery_fee : 0;
 
             $order = Order::create([
@@ -86,6 +117,7 @@ class OrderService
                 'fulfillment' => $data['fulfillment'],
                 'address' => $data['address'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'scheduled_at' => $scheduled,
                 'subtotal' => $subtotal,
                 'delivery_fee' => $fee,
                 'total' => $subtotal + $fee,
@@ -156,6 +188,7 @@ class OrderService
         $lines = [];
         $lines[] = $ar ? "طلب جديد #{$order->code}" : "New order #{$order->code}";
         $lines[] = ($ar ? 'الفرع: ' : 'Branch: ').($ar ? $order->branch->name_ar : $order->branch->name_en);
+        $lines[] = ($ar ? 'الموعد: ' : 'Time: ').$order->whenText($ar ? 'ar' : 'en');
         $lines[] = '';
         foreach ($order->items as $i) {
             $lines[] = "{$i->quantity} × ".($ar ? $i->name_ar : $i->name_en).' = '.self::money($i->line_total);
