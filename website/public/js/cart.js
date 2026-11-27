@@ -16,9 +16,16 @@
     const ex = cart.find(l => l.key === key);
     if (ex) ex.qty++;
     else cart.push({key, item_id: item.id, option_id: option ? option.id : null, addon_ids: ids, name: item.name,
-      option: option ? option.name : null, details: addons.map(a => a.name).join('، '),
+      option: option ? option.name : null, details: describe(addons),
       price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, qty: 1});
     save(); toast(S.t.added);
+  }
+
+  // ["chutney","chutney","yogurt"] -> "chutney ×2، yogurt"
+  function describe(addons) {
+    const seen = new Map();
+    addons.forEach(a => seen.set(a.id, {name: a.name, n: (seen.get(a.id)?.n || 0) + 1}));
+    return [...seen.values()].map(v => v.name + (v.n > 1 ? ' ×' + v.n : '')).join('، ');
   }
 
   function toast(msg) {
@@ -55,7 +62,9 @@
   document.addEventListener('keydown', e => e.key === 'Escape' && closeAll());
 
   const plus = v => v > 0 ? `+${money(v)} <small>${esc(S.aed)}</small>` : '';
-  const head = (title, required) => `<div class="grp-h"><b>${esc(title)}</b><span class="${required ? 'req' : 'opt-l'}">${esc(required ? S.t.required : S.t.optional)}</span></div>`;
+  const head = (title, required, hint = '') => `<div class="grp-h"><span><b>${esc(title)}</b>${hint ? `<small>${esc(hint)}</small>` : ''}</span><span class="${required ? 'req' : 'opt-l'}">${esc(required ? S.t.required : S.t.optional)}</span></div>`;
+  // a paid extra in a multi-choice group is counted (2 chutney); free choices like rice are ticked
+  const counted = (g, a) => g.multiple && a.price > 0;
 
   function openOptions(item) {
     const groups = item.groups || [];
@@ -66,8 +75,10 @@
         ${item.desc ? `<p style="color:var(--muted);margin:4px 0 6px">${esc(item.desc)}</p>` : ''}
         ${item.options.length ? `<div class="grp">${head(S.t.chooseOne, true)}
           ${item.options.map((o, i) => `<label class="opt"><span class="l"><input type="radio" name="opt" value="${i}" ${i === 0 ? 'checked' : ''}>${esc(o.name)}</span><span class="price">${money(o.price)} <small>${esc(S.aed)}</small></span></label>`).join('')}</div>` : ''}
-        ${groups.map((g, gi) => `<div class="grp" data-g="${gi}">${head(g.name, g.required)}
-          ${g.addons.map((a, ai) => `<label class="opt"><span class="l"><input type="${g.multiple ? 'checkbox' : 'radio'}" name="g${gi}" value="${ai}">${esc(a.name)}</span><span class="price">${plus(a.price)}</span></label>`).join('')}</div>`).join('')}
+        ${groups.map((g, gi) => `<div class="grp" data-g="${gi}">${head(g.name, g.required, g.multiple ? S.t.chooseMany : '')}
+          ${g.addons.map((a, ai) => counted(g, a)
+            ? `<div class="opt cnt" data-a="${gi}:${ai}"><span class="l">${esc(a.name)} <span class="price">${plus(a.price)}</span></span><span class="qty"><button type="button" data-am aria-label="-">−</button><span data-n>0</span><button type="button" data-ap aria-label="+">+</button></span></div>`
+            : `<label class="opt"><span class="l"><input type="${g.multiple ? 'checkbox' : 'radio'}" name="g${gi}" value="${ai}">${esc(a.name)}</span><span class="price">${plus(a.price)}</span></label>`).join('')}</div>`).join('')}
         <button class="btn btn-primary btn-block" data-confirm style="margin-top:8px"></button>
       </div>`;
     open(sheet);
@@ -80,6 +91,9 @@
       let missing = null;
       groups.forEach((g, gi) => {
         const sel = $$(`input[name=g${gi}]:checked`, sheet).map(x => g.addons[+x.value]);
+        $$(`[data-a^="${gi}:"]`, sheet).forEach(r => {
+          for (let n = +r.dataset.count || 0; n > 0; n--) sel.push(g.addons[+r.dataset.a.split(':')[1]]);
+        });
         if (g.required && !sel.length && missing === null) missing = gi;
         addons.push(...sel);
       });
@@ -99,6 +113,13 @@
       refresh();
     }));
     sheet.onchange = refresh;
+    sheet.onclick = e => {
+      const b = e.target.closest('[data-am],[data-ap]'); if (!b) return;
+      const r = b.closest('[data-a]');
+      const n = Math.max(0, Math.min(10, (+r.dataset.count || 0) + (b.matches('[data-ap]') ? 1 : -1)));
+      r.dataset.count = n; $('[data-n]', r).textContent = n; r.classList.toggle('on', n > 0);
+      refresh();
+    };
     refresh();
 
     btn.onclick = () => {

@@ -108,9 +108,10 @@ class OrderService
      */
     private function pickAddons(Item $item, array $ids): array
     {
-        $ids = collect($ids)->map(fn ($v) => (int) $v)->unique()->values();
+        // an id may repeat: "two extra chutney" arrives as the chutney id twice
+        $counts = collect($ids)->map(fn ($v) => (int) $v)->countBy();
         $valid = $item->addonGroups->flatMap->addons->pluck('id');
-        if ($ids->diff($valid)->isNotEmpty()) {
+        if ($counts->keys()->diff($valid)->isNotEmpty()) {
             throw ValidationException::withMessages(['items' => __('site.bad_addon', ['item' => $item->name_ar])]);
         }
 
@@ -119,7 +120,7 @@ class OrderService
         $ar = [];
         $en = [];
         foreach ($item->addonGroups as $group) {
-            $sel = $group->addons->whereIn('id', $ids->all());
+            $sel = $group->addons->filter(fn ($a) => $counts->has($a->id));
             if ($group->required && $sel->isEmpty()) {
                 throw ValidationException::withMessages(['items' => __('site.choose_addon', ['group' => $group->name_ar, 'item' => $item->name_ar])]);
             }
@@ -127,13 +128,22 @@ class OrderService
                 throw ValidationException::withMessages(['items' => __('site.bad_addon', ['item' => $item->name_ar])]);
             }
             if ($sel->isEmpty()) continue;
+            $partsAr = [];
+            $partsEn = [];
             foreach ($sel as $a) {
+                $n = $counts[$a->id];
+                // only paid extras in a multi-choice group can be counted (2 chutney); a rice type is picked once
+                if ($n > 1 && (! $group->multiple || (float) $a->price <= 0 || $n > 10)) {
+                    throw ValidationException::withMessages(['items' => __('site.bad_addon', ['item' => $item->name_ar])]);
+                }
                 $chosen[] = ['id' => $a->id, 'group_ar' => $group->name_ar, 'group_en' => $group->name_en,
-                    'name_ar' => $a->name_ar, 'name_en' => $a->name_en, 'price' => (float) $a->price];
-                $extra += (float) $a->price;
+                    'name_ar' => $a->name_ar, 'name_en' => $a->name_en, 'price' => (float) $a->price, 'qty' => $n];
+                $extra += (float) $a->price * $n;
+                $partsAr[] = $a->name_ar.($n > 1 ? ' ×'.$n : '');
+                $partsEn[] = $a->name_en.($n > 1 ? ' ×'.$n : '');
             }
-            $ar[] = $group->name_ar.': '.$sel->pluck('name_ar')->join('، ');
-            $en[] = $group->name_en.': '.$sel->pluck('name_en')->join(', ');
+            $ar[] = $group->name_ar.': '.implode('، ', $partsAr);
+            $en[] = $group->name_en.': '.implode(', ', $partsEn);
         }
 
         return [$chosen, $extra, implode(' · ', $ar), implode(' · ', $en)];

@@ -17,21 +17,21 @@ class DatabaseSeeder extends Seeder
         return file_exists(public_path($path)) ? $path : 'images/menu/emblem.webp';
     }
 
-    /** Rice types a customer can ask for (from the rice section of the menu, plus mixed). */
+    /** Rice types a customer can ask for (from the rice section of the menu). Picking two or more makes it mixed. */
     private const RICE = [
-        ['مندي', 'Mandi'], ['بخاري', 'Bukhari'], ['زربيان', 'Zurbian'], ['كبسة', 'Kabsa'], ['بشاور', 'Beshawer'], ['مكس (نوعين)', 'Mixed (two types)'],
+        ['مندي', 'Mandi'], ['بخاري', 'Bukhari'], ['زربيان', 'Zurbian'], ['كبسة', 'Kabsa'], ['بشاور', 'Beshawer'],
     ];
 
     /** Extras. Yogurt is priced like "plain yogurt" in drinks; the owner sets the rest from the admin panel. */
     private const EXTRAS = [
-        ['شطني إضافي', 'Extra chutney', 0], ['روب إضافي', 'Extra yogurt', 2], ['سلطة إضافية', 'Extra salad', 0],
+        ['شتني إضافي', 'Extra chutney', 2], ['روب إضافي', 'Extra yogurt', 2], ['سلطة إضافية', 'Extra salad', 16],
     ];
 
     /** Extra choices per menu section: [name_ar, name_en, multiple, required, [[ar, en, price], ...]]. */
     private function addonGroups(string $category, array $item): array
     {
         $rice = fn (bool $required) => [$required ? 'نوع الرز' : 'نوع الرز (إذا بدك غير رز الطبق)', $required ? 'Rice type' : 'Rice type (if not the dish\'s own rice)',
-            false, $required, array_map(fn ($r) => [$r[0], $r[1], 0], self::RICE)];
+            true, $required, array_map(fn ($r) => [$r[0], $r[1], 0], self::RICE)];
         $extras = ['إضافات', 'Extras', true, false, self::EXTRAS];
 
         return match (true) {

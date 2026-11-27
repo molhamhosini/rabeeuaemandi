@@ -23,7 +23,7 @@ return [
     'choose_addon' => 'Choose :group for :item',
     'bad_addon' => 'Invalid choices for :item',
     'optional' => 'Optional',
-    'choose_many' => 'Pick any',
+    'choose_many' => 'You can pick more than one',
     'choose_one' => 'Pick one',
     'required' => 'Required',
     'prices_incl_vat' => 'All prices include VAT',
