@@ -1,8 +1,8 @@
 @extends('layouts.site')
 @section('title', __('site.nav.menu'))
 @section('content')
-<section class="menu-hero pattern">
-  <div class="wrap"><h1>{{ __('site.nav.menu') }}</h1><p style="color:var(--muted);margin:6px 0 0">{{ __('site.prices_incl_vat') }}</p></div>
+<section class="menu-hero">
+  <div class="wrap"><span class="eyebrow light">{{ __('site.brand') }}</span><h1>{{ __('site.nav.menu') }}</h1><i class="orn"></i><p>{{ __('site.menu_sub') }}</p></div>
 </section>
 <nav class="tabs"><div class="wrap">
   @foreach($categories as $c)<a href="#{{ $c->slug }}" data-tab="{{ $c->slug }}">{{ $c->tr('name') }}</a>@endforeach
