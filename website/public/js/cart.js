@@ -153,24 +153,61 @@
   const form = $('[data-checkout]');
   if (form) {
     const addr = $('[data-address]', form);
-    // when: as soon as possible, or a set time. Banquets need hours of notice, so they must be booked ahead.
-    const whenAt = $('[data-when-at]', form), at = $('input[name=scheduled_at]', form), note = $('[data-lead-note]', form);
+    // when: as soon as possible, or a set time from the choices. Ordinary dishes are for today;
+    // banquets and the cooking service need hours of notice and can be booked on a later day.
+    const H = S.hours, whenAt = $('[data-when-at]', form), note = $('[data-lead-note]', form);
+    const daySel = $('[data-day]', form), timeSel = $('[data-time]', form), at = $('input[name=scheduled_at]', form);
     const asap = $('input[name=when][value=now]', form), later = $('input[name=when][value=later]', form);
-    // "YYYY-MM-DDTHH:MM" in Abu Dhabi time (UTC+4, no daylight saving), whatever the phone's time zone
-    const local = ms => { const q = 15 * 60e3; return new Date(Math.ceil(ms / q) * q + 4 * 3600e3).toISOString().slice(0, 16); };
+    const loc = (S.locale === 'ar' ? 'ar' : 'en') + '-u-nu-latn';
+    // Abu Dhabi wall clock (UTC+4, no daylight saving) kept in a Date's UTC fields, whatever the phone's zone
+    const abuDhabi = ms => new Date(ms + 4 * 3600e3);
+    const hm = t => t.split(':').map(Number);
+    const two = n => String(n).padStart(2, '0');
+    const key = d => `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())}`;
+    const fmt = (d, o) => d.toLocaleString(loc, {timeZone: 'UTC', ...o});
+    let days = [];
+    const build = lead => {
+      const now = abuDhabi(Date.now()), earliest = abuDhabi(Date.now() + (lead ? lead * 60 : H.meal) * 60e3 - 5 * 60e3);
+      const [oh, om] = hm(H.open), [lh, lm] = hm(H.last);
+      days = [];
+      for (let i = 0; i <= (lead > 0 ? H.days : 0); i++) {
+        const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + i));
+        const slots = [];
+        for (let m = oh * 60 + om; m <= lh * 60 + lm; m += H.step) {
+          const t = new Date(d.getTime() + m * 60e3);
+          if (t >= earliest && t >= now) slots.push(t);
+        }
+        if (slots.length) days.push({i, d, slots});
+      }
+      const open = now.getUTCHours() * 60 + now.getUTCMinutes();
+      return open >= oh * 60 + om && open <= lh * 60 + lm;
+    };
+    const fillTimes = () => {
+      const day = days[+daySel.value] || days[0];
+      const keep = timeSel.value;
+      timeSel.innerHTML = day ? day.slots.map(t => `<option value="${key(t)}T${two(t.getUTCHours())}:${two(t.getUTCMinutes())}">${fmt(t, {hour: 'numeric', minute: '2-digit'})}</option>`).join('') : '';
+      if ([...timeSel.options].some(o => o.value === keep)) timeSel.value = keep;
+      at.value = later.checked ? timeSel.value : '';
+    };
     const syncWhen = () => {
       const lead = Math.max(0, ...cart.map(l => l.lead || 0));
-      asap.disabled = lead > 0;
-      $('[data-asap]', form).classList.toggle('disabled', lead > 0);
-      if (lead > 0 && asap.checked) later.checked = true;
-      note.hidden = !lead;
-      note.textContent = lead ? S.t.leadNote.replaceAll(':hours', lead) : '';
-      whenAt.hidden = !later.checked;
-      at.required = later.checked;
-      at.min = local(Date.now() + lead * 3600e3);
-      if (later.checked && (!at.value || at.value < at.min)) at.value = at.min;
+      const openNow = build(lead);
+      const prevDay = daySel.value;
+      daySel.innerHTML = days.map((x, n) => `<option value="${n}">${x.i === 0 ? S.t.today : x.i === 1 ? S.t.tomorrow : fmt(x.d, {weekday: 'long', day: 'numeric', month: 'numeric'})}</option>`).join('');
+      if (prevDay && days[+prevDay]) daySel.value = prevDay;
+      $('[data-day-f]', form).hidden = lead === 0;
+      const noAsap = lead > 0 || !openNow;
+      asap.disabled = noAsap;
+      $('[data-asap]', form).classList.toggle('disabled', noAsap);
+      if (noAsap && asap.checked) later.checked = true;
+      note.hidden = !lead && days.length > 0;
+      note.textContent = !days.length ? S.t.closedToday : (lead ? S.t.leadNote.replaceAll(':hours', lead) : '');
+      whenAt.hidden = !later.checked || !days.length;
+      fillTimes();
     };
     syncWhen();
+    daySel.addEventListener('change', e => { e.stopPropagation(); fillTimes(); });
+    timeSel.addEventListener('change', e => { e.stopPropagation(); at.value = timeSel.value; });
     form.addEventListener('change', () => { addr.hidden = $('input[name=fulfillment]:checked', form).value !== 'delivery'; syncWhen(); render(); });
     form.addEventListener('submit', async e => {
       e.preventDefault();

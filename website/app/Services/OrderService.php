@@ -35,29 +35,58 @@ class OrderService
         ];
     }
 
-    public const TZ = 'Asia/Dubai';
+    public const TZ = 'Asia/Dubai'; // same as config('restaurant.timezone')
+
+    /** Ordering hours for the site and the app: {open, last, step, days}. */
+    public static function hours(): array
+    {
+        return [
+            'open' => config('restaurant.open'), 'last' => config('restaurant.last'),
+            'step' => (int) config('restaurant.slot_minutes'), 'days' => (int) config('restaurant.book_days'),
+            'meal' => (int) config('restaurant.meal_minutes'),
+        ];
+    }
+
+    /** "12:00 PM to 11:30 PM" in the given language. */
+    public static function hoursText(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $f = fn ($t) => Carbon::createFromFormat('H:i', $t, self::TZ)->locale($locale)->translatedFormat('g:i A');
+        return __('site.schedule.hours', ['open' => $f(config('restaurant.open')), 'last' => $f(config('restaurant.last'))], $locale);
+    }
 
     /**
-     * Check the wanted time against the notice the dishes need (banquets: 3 hours).
+     * Check the wanted time: inside ordering hours, on a 30-minute step, the same day for
+     * ordinary dishes, and with enough notice for banquets and the cooking service (3 hours).
      * Returns the time in UTC, or null for "as soon as possible".
      */
     private function schedule(?string $at, int $lead): ?Carbon
     {
-        $when = $at ? Carbon::createFromFormat('Y-m-d\TH:i', $at, self::TZ)->utc() : null;
-        if ($lead > 0 && ! $when) {
-            throw ValidationException::withMessages(['scheduled_at' => __('site.schedule.required', ['hours' => $lead])]);
+        $fail = fn (string $key) => throw ValidationException::withMessages(['scheduled_at' => __('site.schedule.'.$key, ['hours' => $lead, 'range' => self::hoursText()])]);
+        $now = now(self::TZ);
+        $open = $now->copy()->setTimeFromTimeString(config('restaurant.open'));
+        $last = $now->copy()->setTimeFromTimeString(config('restaurant.last'));
+
+        if (! $at) {
+            if ($lead > 0) $fail('required');
+            if ($now->lt($open) || $now->gt($last)) $fail('closed_now');
+            return null;
         }
-        if (! $when) return null;
+
+        $when = Carbon::createFromFormat('Y-m-d\TH:i', $at, self::TZ)->second(0);
+        $minutes = $when->hour * 60 + $when->minute;
+        [$oh, $om] = array_map('intval', explode(':', config('restaurant.open')));
+        [$lh, $lm] = array_map('intval', explode(':', config('restaurant.last')));
+        if ($minutes < $oh * 60 + $om || $minutes > $lh * 60 + $lm || $minutes % (int) config('restaurant.slot_minutes') !== 0) {
+            $fail('bad_slot');
+        }
+        if ($lead === 0 && ! $when->isSameDay($now)) $fail('same_day');
         // a few minutes of slack for the time the customer spent on the form
-        if ($when->lt(now()->addHours($lead)->subMinutes(10))) {
-            throw ValidationException::withMessages(['scheduled_at' => $lead > 0
-                ? __('site.schedule.too_soon', ['hours' => $lead])
-                : __('site.schedule.past')]);
-        }
-        if ($when->gt(now()->addDays(30))) {
-            throw ValidationException::withMessages(['scheduled_at' => __('site.schedule.too_far')]);
-        }
-        return $when;
+        $notice = $lead > 0 ? $lead * 60 : (int) config('restaurant.meal_minutes');
+        if ($when->lt($now->copy()->addMinutes($notice)->subMinutes(10))) $fail($lead > 0 ? 'too_soon' : 'past');
+        if ($when->gt($now->copy()->addDays((int) config('restaurant.book_days'))->endOfDay())) $fail('too_far');
+
+        return $when->utc();
     }
 
     public static function cardEnabled(): bool

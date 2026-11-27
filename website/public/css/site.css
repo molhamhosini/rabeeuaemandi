@@ -347,3 +347,9 @@ main > .section:last-child{padding-bottom:96px}
 .seg label.disabled{opacity:.45;pointer-events:none}
 input[type=datetime-local]{font-family:inherit}
 .when-line{margin:0 0 10px;color:var(--brown)}
+
+.hours-note{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+.when-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.when-pick [data-day-f][hidden]+.field{grid-column:1/-1}
+.when-pick .field{margin:0}
+.when-pick select{width:100%}
