@@ -239,7 +239,7 @@ main > .section:last-child{padding-bottom:96px}
 
 .sheet{position:fixed;inset-inline:0;bottom:0;margin:0 auto;max-width:520px;background:var(--cream);z-index:61;border-radius:26px 26px 0 0;transform:translateY(105%);transition:transform .3s ease;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
 .sheet.open{transform:none}
-.sheet .ph{background:#F6E7C6;height:230px;display:grid;place-items:center;position:relative}
+.sheet .ph{background:#F6E7C6;height:190px;display:grid;place-items:center;position:relative}
 .sheet .ph img{width:100%;height:100%;object-fit:cover}
 .sheet .ph .x{position:absolute;top:12px;inset-inline-end:12px;background:rgba(255,253,248,.9)}
 .sheet .in{padding:18px 20px 22px;overflow-y:auto}
@@ -283,3 +283,46 @@ main > .section:last-child{padding-bottom:96px}
 .cat{width:124px}
 @media (max-width:520px){.cats{gap:18px 8px}.cat{width:30%}}
 @media (max-width:520px){.dish .tag{font-size:.66rem;padding:2px 8px;top:8px;inset-inline-start:8px}}
+
+/* option sheet: groups of choices (rice type, serving, extras) */
+.grp{margin:14px 0 6px}
+.grp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.grp-h b{color:var(--brown);font-size:1.02rem}
+.grp-h .req,.grp-h .opt-l{font-size:.75rem;font-weight:700;padding:2px 10px;border-radius:999px}
+.grp-h .req{background:var(--night-2);color:var(--gold-3)}
+.grp-h .opt-l{background:var(--sand);color:var(--muted)}
+.grp.need{animation:need .6s ease}
+.grp.need .grp-h .req{background:var(--red);color:#fff}
+@keyframes need{0%,100%{transform:none}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.opt{padding:12px 14px;margin-bottom:8px}
+.opt .l{display:flex;gap:10px;align-items:center;flex:1}
+.opt input[type=checkbox]{accent-color:var(--brown);width:18px;height:18px}
+.opt:has(input:checked){border-color:var(--gold);background:#FFF8EA}
+.btn.muted{opacity:.6}
+.line .nm small.det{display:block;color:var(--gold-2);line-height:1.4}
+
+/* mobile side menu */
+.burger{display:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--white);color:var(--brown);place-items:center;padding:0}
+.burger svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+@media (max-width:820px){.burger{display:grid}}
+.mnav{position:fixed;top:0;bottom:0;inset-inline-start:0;width:min(330px,86%);z-index:61;display:flex;flex-direction:column;gap:18px;padding:18px 20px 24px;overflow-y:auto;color:#EBDDBF;
+  background:var(--night);background-image:radial-gradient(circle at 14px 14px,rgba(233,207,156,.08) 1.4px,transparent 2px),linear-gradient(170deg,#3E2A18,#24180D);background-size:44px 44px,auto;
+  transform:translateX(-105%);transition:transform .3s ease;box-shadow:0 0 60px rgba(0,0,0,.35)}
+[dir=rtl] .mnav{transform:translateX(105%)}
+.mnav.open{transform:none!important}
+.mnav-h{display:flex;align-items:center;justify-content:space-between}
+.mnav-h img{height:54px;width:auto}
+.mnav-h .x{background:rgba(233,207,156,.12);color:var(--gold-3)}
+.mnav-links{display:flex;flex-direction:column;border-top:1px solid rgba(233,207,156,.15)}
+.mnav-links a{display:flex;align-items:center;justify-content:space-between;padding:15px 4px;font-family:var(--display);font-size:1.25rem;color:#FFF6E4;border-bottom:1px solid rgba(233,207,156,.15)}
+.mnav-links a.on{color:var(--gold-3)}
+.mnav-links a.on::before{content:"";width:8px;height:8px;transform:rotate(45deg);background:var(--gold);margin-inline-end:10px;order:-1}
+.mnav-links a.on{justify-content:flex-start}
+.mnav-links a .badge{margin-inline-start:auto}
+.mnav-branches{display:grid;gap:12px}
+.mnav-b{background:rgba(233,207,156,.07);border:1px solid rgba(233,207,156,.18);border-radius:16px;padding:12px 14px}
+.mnav-b b{display:block;color:#FFF6E4;margin-bottom:8px}
+.mnav-b .acts{display:flex;gap:8px}
+.mnav-b .btn{flex:1;padding:9px 12px;font-size:.92rem}
+.mnav-lang{margin-top:auto;align-self:flex-start;padding:8px 16px;border-radius:999px;border:1px solid rgba(233,207,156,.35);color:var(--gold-3);font-weight:700}
+@media (max-width:820px){.hdr-actions .lang{display:none}}

@@ -39,6 +39,7 @@ class OrderingTest extends TestCase
         $lamb = Item::where('name_en', 'Mandi Lamb')->first();
         $banquet = Item::where('name_en', 'Mandi')->first();
         $goat = $banquet->options()->where('name_en', 'Goat (Tais)')->first();
+        $addon = fn (Item $i, string $name) => $i->addonGroups()->with('addons')->get()->flatMap->addons->firstWhere('name_en', $name)->id;
 
         $res = $this->postJson('/api/v1/orders', [
             'branch_id' => Branch::first()->id,
@@ -49,11 +50,17 @@ class OrderingTest extends TestCase
             'payment_method' => 'whatsapp',
             'items' => [
                 ['item_id' => $lamb->id, 'quantity' => 2, 'price' => 1], // client price must be ignored
-                ['item_id' => $banquet->id, 'option_id' => $goat->id, 'quantity' => 1],
+                ['item_id' => $banquet->id, 'option_id' => $goat->id, 'quantity' => 1, 'addon_ids' => [
+                    $addon($banquet, 'Mixed (two types)'), $addon($banquet, 'Split over several plates'),
+                    $addon($banquet, 'Extra yogurt'), $addon($banquet, 'Extra chutney'),
+                ]],
             ],
         ])->assertCreated()->json();
 
-        $this->assertEquals(73 * 2 + 1225, $res['order']['total']);
+        // the extra yogurt (2 AED) is added to the banquet price
+        $this->assertEquals(73 * 2 + 1225 + 2, $res['order']['total']);
+        $this->assertStringContainsString(rawurlencode('نوع الرز: مكس (نوعين)'), $res['redirect']);
+        $this->assertStringContainsString(rawurlencode('إضافات: شطني إضافي، روب إضافي'), $res['redirect']);
         $this->assertStringStartsWith('https://wa.me/971581404800?text=', $res['redirect']);
         $this->assertStringContainsString(rawurlencode('ذبيحة مندي - تيس'), $res['redirect']);
     }
@@ -66,6 +73,33 @@ class OrderingTest extends TestCase
             'fulfillment' => 'pickup', 'payment_method' => 'whatsapp',
             'items' => [['item_id' => $banquet->id, 'quantity' => 1]],
         ])->assertStatus(422);
+    }
+
+    public function test_banquet_needs_rice_and_serving_and_rejects_foreign_addons(): void
+    {
+        $banquet = Item::where('name_en', 'Mandi')->first();
+        $lamb = Item::where('name_en', 'Mandi Lamb')->first();
+        $groups = $banquet->addonGroups()->with('addons')->get();
+        $rice = $groups->firstWhere('name_en', 'Rice type')->addons;
+        $serving = $groups->firstWhere('name_en', 'Serving')->addons;
+        $order = fn (array $ids) => $this->postJson('/api/v1/orders', [
+            'branch_id' => Branch::first()->id, 'customer_name' => 'T', 'customer_phone' => '0501234567',
+            'fulfillment' => 'pickup', 'payment_method' => 'whatsapp',
+            'items' => [['item_id' => $banquet->id, 'option_id' => $banquet->options()->value('id'), 'quantity' => 1, 'addon_ids' => $ids]],
+        ]);
+
+        $order([$serving[0]->id])->assertStatus(422);                                  // no rice type
+        $order([$rice[0]->id, $rice[1]->id, $serving[0]->id])->assertStatus(422);      // two rice types in a pick-one group
+        $foreign = $lamb->addonGroups()->with('addons')->first()->addons[0]->id;
+        $order([$rice[0]->id, $serving[0]->id, $foreign])->assertStatus(422);         // choice from another dish
+        $order([$rice[0]->id, $serving[1]->id])->assertCreated();
+
+        // rice type is optional on a lamb plate
+        $this->postJson('/api/v1/orders', [
+            'branch_id' => Branch::first()->id, 'customer_name' => 'T', 'customer_phone' => '0501234567',
+            'fulfillment' => 'pickup', 'payment_method' => 'whatsapp',
+            'items' => [['item_id' => $lamb->id, 'quantity' => 1]],
+        ])->assertCreated();
     }
 
     public function test_card_order_creates_stripe_checkout_and_webhook_marks_paid(): void

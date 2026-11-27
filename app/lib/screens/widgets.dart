@@ -75,7 +75,7 @@ class DishCard extends StatelessWidget {
                 const Spacer(),
                 Row(children: [
                   Expanded(child: Price(item.displayPrice, from: item.hasOptions, size: 15)),
-                  _AddButton(label: item.hasOptions ? tr('choose', l) : '+ ${tr('add', l)}', onTap: () => addToCart(context, item)),
+                  _AddButton(label: item.hasChoices ? tr('choose', l) : '+ ${tr('add', l)}', onTap: () => addToCart(context, item)),
                 ]),
               ]),
             ),
@@ -106,23 +106,24 @@ class _AddButton extends StatelessWidget {
       );
 }
 
-/// Adds directly, or opens a sheet to pick the lamb type / harees size first.
+/// Adds directly, or opens a sheet to pick the type / size and extra choices (rice, serving, extras).
 Future<void> addToCart(BuildContext context, MenuItem item) async {
   final s = AppScope.read(context);
-  if (!item.hasOptions) {
+  if (!item.hasChoices) {
     s.add(item);
     _toast(context, tr('added', s.lang));
     return;
   }
-  final picked = await showModalBottomSheet<ItemOption>(
+  final picked = await showModalBottomSheet<(ItemOption?, List<Addon>)>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Brand.cream,
+    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .9),
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) => _OptionSheet(item: item, lang: s.lang),
   );
   if (picked != null && context.mounted) {
-    s.add(item, picked);
+    s.add(item, picked.$1, picked.$2);
     _toast(context, tr('added', s.lang));
   }
 }
@@ -143,53 +144,130 @@ class _OptionSheet extends StatefulWidget {
 }
 
 class _OptionSheetState extends State<_OptionSheet> {
-  late ItemOption selected = widget.item.options.first;
+  late ItemOption? selected = widget.item.options.isEmpty ? null : widget.item.options.first;
+  final Map<int, Set<int>> picks = {}; // group id -> addon ids
+  int? missing; // group id flagged when the customer skipped a required choice
+
+  List<Addon> get chosen => [
+        for (final g in widget.item.addonGroups)
+          for (final a in g.addons)
+            if (picks[g.id]?.contains(a.id) ?? false) a,
+      ];
+
+  double get total => (selected?.price ?? widget.item.price ?? 0) + chosen.fold(0.0, (t, a) => t + a.price);
+
+  void toggle(AddonGroup g, Addon a) => setState(() {
+        final set = picks.putIfAbsent(g.id, () => <int>{});
+        if (g.multiple) {
+          set.contains(a.id) ? set.remove(a.id) : set.add(a.id);
+        } else if (set.contains(a.id)) {
+          if (!g.required) set.clear(); // an optional single choice can be cleared
+        } else {
+          set
+            ..clear()
+            ..add(a.id);
+        }
+        if (missing == g.id && set.isNotEmpty) missing = null;
+      });
+
+  void confirm() {
+    for (final g in widget.item.addonGroups) {
+      if (g.required && (picks[g.id]?.isEmpty ?? true)) {
+        setState(() => missing = g.id);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${tr('pick_required', widget.lang)}: ${g.name.of(widget.lang)}')));
+        return;
+      }
+    }
+    Navigator.pop(context, (selected, chosen));
+  }
+
+  Widget _head(String title, bool required, {bool flagged = false}) => Padding(
+        padding: const EdgeInsets.only(top: 14, bottom: 8),
+        child: Row(children: [
+          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Brand.brown))),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            decoration: BoxDecoration(
+              color: flagged ? const Color(0xFFB23A2A) : (required ? Brand.brown : Brand.sand),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(tr(required ? 'required' : 'optional', widget.lang),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: required || flagged ? Colors.white : Brand.muted)),
+          ),
+        ]),
+      );
+
+  Widget _choice({required bool on, required bool square, required String label, required double price, required bool plus, required VoidCallback onTap}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Material(
+          color: on ? const Color(0xFFFFF8EA) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: on ? Brand.gold : Brand.line, width: 1.5),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              child: Row(children: [
+                Icon(
+                  square ? (on ? Icons.check_box : Icons.check_box_outline_blank) : (on ? Icons.radio_button_checked : Icons.radio_button_off),
+                  color: Brand.brown,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+                if (!plus) Price(price) else if (price > 0) Text('+${money(price)} ${tr('aed', widget.lang)}', style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
+              ]),
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final l = widget.lang;
     final item = widget.item;
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          ClipRRect(borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), child: SizedBox(height: 200, child: DishImage(item, height: 200))),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Flexible(
+          child: SingleChildScrollView(
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(item.name.of(l), style: Theme.of(context).textTheme.headlineMedium),
-              if (!item.description.isEmpty)
-                Padding(padding: const EdgeInsets.only(top: 4, bottom: 6), child: Text(item.description.of(l), style: const TextStyle(color: Brand.muted))),
-              const SizedBox(height: 10),
-              for (final o in item.options)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Material(
-                    color: o == selected ? const Color(0xFFFFF8EA) : Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(color: o == selected ? Brand.brown : Brand.line, width: 1.5),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: () => setState(() => selected = o),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        child: Row(children: [
-                          Icon(o == selected ? Icons.radio_button_checked : Icons.radio_button_off, color: Brand.brown),
-                          const SizedBox(width: 10),
-                          Expanded(child: Text(o.name.of(l), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
-                          Price(o.price),
-                        ]),
+              ClipRRect(borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), child: SizedBox(height: 170, child: DishImage(item, height: 170))),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  Text(item.name.of(l), style: Theme.of(context).textTheme.headlineMedium),
+                  if (!item.description.isEmpty)
+                    Padding(padding: const EdgeInsets.only(top: 4), child: Text(item.description.of(l), style: const TextStyle(color: Brand.muted))),
+                  if (item.options.isNotEmpty) ...[
+                    _head(tr('choose_one', l), true),
+                    for (final o in item.options)
+                      _choice(on: o == selected, square: false, label: o.name.of(l), price: o.price, plus: false, onTap: () => setState(() => selected = o)),
+                  ],
+                  for (final g in item.addonGroups) ...[
+                    _head(g.name.of(l), g.required, flagged: missing == g.id),
+                    for (final a in g.addons)
+                      _choice(
+                        on: picks[g.id]?.contains(a.id) ?? false,
+                        square: g.multiple,
+                        label: a.name.of(l),
+                        price: a.price,
+                        plus: true,
+                        onTap: () => toggle(g, a),
                       ),
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 6),
-              FilledButton(onPressed: () => Navigator.pop(context, selected), child: Text('+ ${tr('add', l)}')),
+                  ],
+                ]),
+              ),
             ]),
           ),
-        ]),
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          child: FilledButton(onPressed: confirm, child: Text('+ ${tr('add', l)} · ${money(total)} ${tr('aed', l)}')),
+        ),
+      ]),
     );
   }
 }

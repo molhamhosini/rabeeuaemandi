@@ -17,6 +17,14 @@ class Item extends Model
 
     public function options() { return $this->hasMany(ItemOption::class)->orderBy('sort'); }
 
+    public function addonGroups() { return $this->hasMany(ItemAddonGroup::class)->orderBy('sort'); }
+
+    /** The customer has something to pick before adding to the cart. */
+    public function hasChoices(): bool
+    {
+        return $this->options->isNotEmpty() || $this->addonGroups->isNotEmpty();
+    }
+
     public function imageUrl(): ?string
     {
         if (! $this->image) return null;
@@ -44,6 +52,7 @@ class Item extends Model
             'options' => $this->options->map(fn ($o) => [
                 'id' => $o->id, 'name' => ['ar' => $o->name_ar, 'en' => $o->name_en], 'price' => (float) $o->price,
             ])->values(),
+            'addon_groups' => $this->addonGroups->map->toApi()->values(),
         ];
     }
 }

@@ -19,7 +19,7 @@
   </form>
 </div>
 <div class="card" style="margin-top:14px">
-  @foreach($order->items as $i)<div class="sum" style="color:var(--ink)"><span>{{ $i->quantity }} × {{ app()->getLocale() === 'en' ? $i->name_en : $i->name_ar }}</span><span>{{ \App\Services\OrderService::money($i->line_total) }}</span></div>@endforeach
+  @foreach($order->items as $i)<div class="sum" style="color:var(--ink)"><span>{{ $i->quantity }} × {{ app()->getLocale() === 'en' ? $i->name_en : $i->name_ar }}@if($d = app()->getLocale() === 'en' ? $i->details_en : $i->details_ar)<small style="display:block;color:#9A6E3B;font-weight:700">{{ $d }}</small>@endif</span><span>{{ \App\Services\OrderService::money($i->line_total) }}</span></div>@endforeach
   <div class="sum total"><span>{{ __('site.cart.total') }}</span><span>{{ \App\Services\OrderService::money($order->total) }} {{ __('site.aed') }}</span></div>
 </div>
 @endsection

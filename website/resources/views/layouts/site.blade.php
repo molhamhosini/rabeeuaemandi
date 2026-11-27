@@ -15,7 +15,7 @@
 <meta property="og:image" content="{{ asset('images/photos/hero-chicken.webp') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=2">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=3">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="{{ $rtl ? 'ar' : 'en' }}">
@@ -30,6 +30,7 @@
       <a href="{{ route('branches') }}" @class(['on' => request()->routeIs('branches')])>{{ __('site.nav.branches') }}</a>
     </nav>
     <div class="hdr-actions">
+      <button class="burger" data-open-nav aria-label="{{ __('site.nav.open_menu') }}"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <a class="lang" href="?lang={{ $rtl ? 'en' : 'ar' }}">{{ $rtl ? 'EN' : 'ع' }}</a>
       <button class="cart-btn" data-open-cart aria-label="{{ __('site.nav.cart') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
@@ -77,16 +78,41 @@
   </div>
 </aside>
 <div class="sheet" data-sheet></div>
+<aside class="mnav" data-mnav aria-label="{{ __('site.nav.open_menu') }}">
+  <div class="mnav-h">
+    <img src="{{ asset('images/brand/logo-wordmark-gold.png') }}" alt="{{ __('site.brand') }}">
+    <button class="x" data-close aria-label="×">&times;</button>
+  </div>
+  <nav class="mnav-links">
+    <a href="{{ route('home') }}" @class(['on' => request()->routeIs('home')])>{{ __('site.nav.home') }}</a>
+    <a href="{{ route('menu') }}" @class(['on' => request()->routeIs('menu')])>{{ __('site.nav.menu') }}</a>
+    <a href="{{ route('branches') }}" @class(['on' => request()->routeIs('branches')])>{{ __('site.nav.branches') }}</a>
+    <a href="#" data-open-cart>{{ __('site.nav.cart') }} <span class="badge" data-cart-count>0</span></a>
+  </nav>
+  @php($navBranches = \App\Models\Branch::active()->get())
+  <div class="mnav-branches">
+    @foreach($navBranches as $b)
+      <div class="mnav-b">
+        <b>{{ $b->tr('name') }}</b>
+        <div class="acts">
+          <a class="btn btn-wa" href="https://wa.me/{{ $b->whatsapp }}" target="_blank" rel="noopener">{{ __('site.whatsapp') }}</a>
+          <a class="btn btn-outline-light" href="tel:{{ str_replace(' ', '', $b->phones[0] ?? '') }}">{{ __('site.call') }}</a>
+        </div>
+      </div>
+    @endforeach
+  </div>
+  <a class="mnav-lang" href="?lang={{ $rtl ? 'en' : 'ar' }}">{{ $rtl ? 'English' : 'العربية' }}</a>
+</aside>
 <div class="toast" data-toast></div>
 
 <script>
 window.SITE = {
   locale: @json(app()->getLocale()),
   aed: @json(__('site.aed')),
-  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), sending: @json(__('site.checkout.sending')) },
+  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), optional: @json(__('site.optional')), required: @json(__('site.required')), chooseOne: @json(__('site.choose_one')), chooseMany: @json(__('site.choose_many')), notes: @json(__('site.item_notes')), sending: @json(__('site.checkout.sending')) },
 };
 </script>
-<script src="{{ asset('js/cart.js') }}?v=2"></script>
+<script src="{{ asset('js/cart.js') }}?v=3"></script>
 @stack('scripts')
 </body>
 </html>

@@ -37,7 +37,7 @@ class MenuController extends Controller
 
     public function menu()
     {
-        return Category::active()->with('activeItems.options')->get()->map(fn ($c) => [
+        return Category::active()->with('activeItems.options', 'activeItems.addonGroups.addons')->get()->map(fn ($c) => [
             'id' => $c->id,
             'slug' => $c->slug,
             'name' => ['ar' => $c->name_ar, 'en' => $c->name_en],

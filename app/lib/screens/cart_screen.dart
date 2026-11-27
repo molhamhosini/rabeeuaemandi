@@ -37,6 +37,9 @@ class CartScreen extends StatelessWidget {
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(line.item.name.of(l), style: const TextStyle(fontWeight: FontWeight.w700)),
                       if (line.option != null) Text(line.option!.name.of(l), style: const TextStyle(color: Brand.muted, fontSize: 13)),
+                      if (line.addons.isNotEmpty)
+                        Text(line.addons.map((a) => a.name.of(l)).join(l == 'en' ? ', ' : '، '),
+                            style: const TextStyle(color: Brand.gold2, fontSize: 13, fontWeight: FontWeight.w600)),
                       Price(line.unitPrice, size: 14),
                     ]),
                   ),
