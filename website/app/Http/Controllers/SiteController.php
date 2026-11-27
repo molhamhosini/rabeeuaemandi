@@ -14,7 +14,7 @@ class SiteController extends Controller
     public function home()
     {
         return view('site.home', [
-            'featured' => Item::with('options')->where('is_active', true)->where('is_featured', true)->orderBy('category_id')->get(),
+            'featured' => Item::with('options', 'addonGroups.addons')->where('is_active', true)->where('is_featured', true)->orderBy('category_id')->get(),
             'categories' => Category::active()->get(),
             'branches' => Branch::active()->get(),
         ]);
@@ -23,7 +23,7 @@ class SiteController extends Controller
     public function menu()
     {
         return view('site.menu', [
-            'categories' => Category::active()->with(['activeItems.options'])->get(),
+            'categories' => Category::active()->with(['activeItems.options', 'activeItems.addonGroups.addons'])->get(),
             'branches' => Branch::active()->get(),
         ]);
     }

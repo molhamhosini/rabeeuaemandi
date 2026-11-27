@@ -26,6 +26,8 @@ class OrderService
             'items' => 'required|array|min:1|max:50',
             'items.*.item_id' => 'required|integer|exists:items,id',
             'items.*.option_id' => 'nullable|integer|exists:item_options,id',
+            'items.*.addon_ids' => 'nullable|array|max:30',
+            'items.*.addon_ids.*' => 'integer',
             'items.*.quantity' => 'required|integer|min:1|max:50',
         ];
     }
@@ -48,7 +50,7 @@ class OrderService
             $lines = [];
             $subtotal = 0;
             foreach ($data['items'] as $row) {
-                $item = Item::with('options')->where('is_active', true)->findOrFail($row['item_id']);
+                $item = Item::with('options', 'addonGroups.addons')->where('is_active', true)->findOrFail($row['item_id']);
                 $option = null;
                 if ($item->options->isNotEmpty()) {
                     $option = $item->options->firstWhere('id', (int) ($row['option_id'] ?? 0));
@@ -56,14 +58,18 @@ class OrderService
                         throw ValidationException::withMessages(['items' => __('site.choose_option', ['item' => $item->name_ar])]);
                     }
                 }
-                $unit = (float) ($option?->price ?? $item->price);
+                [$addons, $extra, $detailsAr, $detailsEn] = $this->pickAddons($item, $row['addon_ids'] ?? []);
+                $unit = (float) ($option?->price ?? $item->price) + $extra;
                 $qty = (int) $row['quantity'];
                 $subtotal += $unit * $qty;
                 $lines[] = [
                     'item_id' => $item->id,
                     'item_option_id' => $option?->id,
+                    'addons' => $addons ?: null,
                     'name_ar' => $item->name_ar.($option ? ' - '.$option->name_ar : ''),
                     'name_en' => $item->name_en.($option ? ' - '.$option->name_en : ''),
+                    'details_ar' => $detailsAr ?: null,
+                    'details_en' => $detailsEn ?: null,
                     'unit_price' => $unit,
                     'quantity' => $qty,
                     'line_total' => $unit * $qty,
@@ -94,6 +100,45 @@ class OrderService
         });
     }
 
+    /**
+     * Check the customer's extra choices (rice type, serving, extras) against the dish
+     * and price them from the database.
+     *
+     * @return array{0: array, 1: float, 2: string, 3: string}
+     */
+    private function pickAddons(Item $item, array $ids): array
+    {
+        $ids = collect($ids)->map(fn ($v) => (int) $v)->unique()->values();
+        $valid = $item->addonGroups->flatMap->addons->pluck('id');
+        if ($ids->diff($valid)->isNotEmpty()) {
+            throw ValidationException::withMessages(['items' => __('site.bad_addon', ['item' => $item->name_ar])]);
+        }
+
+        $chosen = [];
+        $extra = 0.0;
+        $ar = [];
+        $en = [];
+        foreach ($item->addonGroups as $group) {
+            $sel = $group->addons->whereIn('id', $ids->all());
+            if ($group->required && $sel->isEmpty()) {
+                throw ValidationException::withMessages(['items' => __('site.choose_addon', ['group' => $group->name_ar, 'item' => $item->name_ar])]);
+            }
+            if (! $group->multiple && $sel->count() > 1) {
+                throw ValidationException::withMessages(['items' => __('site.bad_addon', ['item' => $item->name_ar])]);
+            }
+            if ($sel->isEmpty()) continue;
+            foreach ($sel as $a) {
+                $chosen[] = ['id' => $a->id, 'group_ar' => $group->name_ar, 'group_en' => $group->name_en,
+                    'name_ar' => $a->name_ar, 'name_en' => $a->name_en, 'price' => (float) $a->price];
+                $extra += (float) $a->price;
+            }
+            $ar[] = $group->name_ar.': '.$sel->pluck('name_ar')->join('، ');
+            $en[] = $group->name_en.': '.$sel->pluck('name_en')->join(', ');
+        }
+
+        return [$chosen, $extra, implode(' · ', $ar), implode(' · ', $en)];
+    }
+
     /** wa.me link that opens WhatsApp to the branch with the order already written out. */
     public function whatsappUrl(Order $order): string
     {
@@ -104,6 +149,10 @@ class OrderService
         $lines[] = '';
         foreach ($order->items as $i) {
             $lines[] = "{$i->quantity} × ".($ar ? $i->name_ar : $i->name_en).' = '.self::money($i->line_total);
+            $details = $ar ? $i->details_ar : $i->details_en;
+            if ($details) {
+                foreach (explode(' · ', $details) as $d) $lines[] = '   - '.$d;
+            }
         }
         $lines[] = '';
         $lines[] = ($ar ? 'الإجمالي: ' : 'Total: ').self::money($order->total).' AED';
@@ -137,6 +186,9 @@ class OrderService
             $form["line_items[$n][price_data][currency]"] = $currency;
             $form["line_items[$n][price_data][unit_amount]"] = (int) round($i->unit_price * 100);
             $form["line_items[$n][price_data][product_data][name]"] = $ar ? $i->name_ar : $i->name_en;
+            if ($details = $ar ? $i->details_ar : $i->details_en) {
+                $form["line_items[$n][price_data][product_data][description]"] = mb_substr($details, 0, 500);
+            }
             $n++;
         }
         if ($order->delivery_fee > 0) {

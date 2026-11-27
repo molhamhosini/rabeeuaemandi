@@ -63,7 +63,13 @@ class _OrderScreenState extends State<OrderScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(children: [
-                      Expanded(child: Text('${i['quantity']} × ${L10nText.fromJson(i['name']).of(l)}')),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text('${i['quantity']} × ${L10nText.fromJson(i['name']).of(l)}'),
+                          if (L10nText.fromJson(i['details']).of(l).isNotEmpty)
+                            Text(L10nText.fromJson(i['details']).of(l), style: const TextStyle(color: Brand.gold2, fontSize: 13)),
+                        ]),
+                      ),
                       Text(money((i['line_total'] as num).toDouble())),
                     ]),
                   ),

@@ -8,6 +8,10 @@
           'image' => $i->imageUrl(),
           'desc' => $i->tr('description'),
           'options' => $i->options->map(fn ($o) => ['id' => $o->id, 'name' => $o->tr('name'), 'price' => (float) $o->price])->values()->all(),
+          'groups' => $i->addonGroups->map(fn ($g) => [
+              'id' => $g->id, 'name' => $g->tr('name'), 'multiple' => $g->multiple, 'required' => $g->required,
+              'addons' => $g->addons->map(fn ($a) => ['id' => $a->id, 'name' => $a->tr('name'), 'price' => (float) $a->price])->values()->all(),
+          ])->values()->all(),
       ];
   }
 @endphp

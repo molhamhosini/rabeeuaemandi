@@ -29,7 +29,8 @@ class Order extends Model
             'total' => (float) $this->total,
             'branch' => ['id' => $this->branch_id, 'name' => ['ar' => $this->branch->name_ar, 'en' => $this->branch->name_en]],
             'items' => $this->items->map(fn ($i) => [
-                'name' => ['ar' => $i->name_ar, 'en' => $i->name_en], 'unit_price' => (float) $i->unit_price,
+                'name' => ['ar' => $i->name_ar, 'en' => $i->name_en],
+                'details' => ['ar' => $i->details_ar, 'en' => $i->details_en], 'unit_price' => (float) $i->unit_price,
                 'quantity' => $i->quantity, 'line_total' => (float) $i->line_total,
             ]),
             'created_at' => $this->created_at?->toIso8601String(),

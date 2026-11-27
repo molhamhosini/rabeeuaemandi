@@ -23,6 +23,34 @@ class ItemOption {
       ItemOption(j['id'] as int, L10nText.fromJson(j['name']), (j['price'] as num).toDouble());
 }
 
+/// One extra choice on a dish (a rice type, a serving style, an extra like chutney).
+class Addon {
+  final int id;
+  final L10nText name;
+  final double price; // added to the dish price
+  Addon(this.id, this.name, this.price);
+
+  factory Addon.fromJson(Map<String, dynamic> j) =>
+      Addon(j['id'] as int, L10nText.fromJson(j['name']), (j['price'] as num).toDouble());
+}
+
+class AddonGroup {
+  final int id;
+  final L10nText name;
+  final bool multiple;
+  final bool required;
+  final List<Addon> addons;
+  AddonGroup(this.id, this.name, this.multiple, this.required, this.addons);
+
+  factory AddonGroup.fromJson(Map<String, dynamic> j) => AddonGroup(
+        j['id'] as int,
+        L10nText.fromJson(j['name']),
+        j['multiple'] == true,
+        j['required'] == true,
+        ((j['addons'] as List?) ?? []).map((a) => Addon.fromJson(a)).toList(),
+      );
+}
+
 class MenuItem {
   final int id;
   final int categoryId;
@@ -32,6 +60,7 @@ class MenuItem {
   final String? image;
   final bool featured;
   final List<ItemOption> options;
+  final List<AddonGroup> addonGroups;
 
   MenuItem({
     required this.id,
@@ -42,9 +71,11 @@ class MenuItem {
     required this.image,
     required this.featured,
     required this.options,
+    this.addonGroups = const [],
   });
 
   bool get hasOptions => options.isNotEmpty;
+  bool get hasChoices => options.isNotEmpty || addonGroups.isNotEmpty;
   bool get isPhoto => (image?.contains('/photos/') ?? false) || (image?.contains('/menu/') ?? false);
 
   double get displayPrice {
@@ -62,6 +93,7 @@ class MenuItem {
         image: j['image'] as String?,
         featured: j['featured'] == true,
         options: ((j['options'] as List?) ?? []).map((o) => ItemOption.fromJson(o)).toList(),
+        addonGroups: ((j['addon_groups'] as List?) ?? []).map((g) => AddonGroup.fromJson(g)).toList(),
       );
 }
 

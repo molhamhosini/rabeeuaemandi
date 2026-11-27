@@ -1,4 +1,5 @@
 @php($hasOpts = $item->options->isNotEmpty())
+@php($hasChoices = $item->hasChoices())
 <article class="dish">
   <div @class(['ph', 'photo' => str_contains((string) $item->image, 'photos/'), 'menu' => str_contains((string) $item->image, 'images/menu/'), 'emblem' => str_contains((string) $item->image, 'emblem')])>
     @if($item->image)
@@ -14,7 +15,7 @@
     @if($item->tr('description'))<div class="desc">{{ $item->tr('description') }}</div>@endif
     <div class="row">
       <span class="price">@if($hasOpts)<small>{{ __('site.from') }} </small>@endif{{ \App\Services\OrderService::money($item->displayPrice()) }} <small>{{ __('site.aed') }}</small></span>
-      <button class="add" data-add="{{ $item->id }}" aria-label="{{ $hasOpts ? __('site.choose') : __('site.add') }} {{ $item->tr('name') }}" title="{{ $hasOpts ? __('site.choose') : __('site.add') }}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="add" data-add="{{ $item->id }}" aria-label="{{ $hasChoices ? __('site.choose') : __('site.add') }} {{ $item->tr('name') }}" title="{{ $hasChoices ? __('site.choose') : __('site.add') }}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
   </div>
 </article>

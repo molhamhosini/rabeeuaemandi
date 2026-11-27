@@ -17,6 +17,38 @@ class DatabaseSeeder extends Seeder
         return file_exists(public_path($path)) ? $path : 'images/menu/emblem.webp';
     }
 
+    /** Rice types a customer can ask for (from the rice section of the menu, plus mixed). */
+    private const RICE = [
+        ['مندي', 'Mandi'], ['بخاري', 'Bukhari'], ['زربيان', 'Zurbian'], ['كبسة', 'Kabsa'], ['بشاور', 'Beshawer'], ['مكس (نوعين)', 'Mixed (two types)'],
+    ];
+
+    /** Extras. Yogurt is priced like "plain yogurt" in drinks; the owner sets the rest from the admin panel. */
+    private const EXTRAS = [
+        ['شطني إضافي', 'Extra chutney', 0], ['روب إضافي', 'Extra yogurt', 2], ['سلطة إضافية', 'Extra salad', 0],
+    ];
+
+    /** Extra choices per menu section: [name_ar, name_en, multiple, required, [[ar, en, price], ...]]. */
+    private function addonGroups(string $category, array $item): array
+    {
+        $rice = fn (bool $required) => [$required ? 'نوع الرز' : 'نوع الرز (إذا بدك غير رز الطبق)', $required ? 'Rice type' : 'Rice type (if not the dish\'s own rice)',
+            false, $required, array_map(fn ($r) => [$r[0], $r[1], 0], self::RICE)];
+        $extras = ['إضافات', 'Extras', true, false, self::EXTRAS];
+
+        return match (true) {
+            $category === 'banquets' && ! str_contains($item['name_ar'], 'بدون أرز') => [
+                $rice(true),
+                ['طريقة التقديم', 'Serving', false, true, [
+                    ['صحن واحد كبير', 'One large platter', 0],
+                    ['مقسّمة على عدة صحون', 'Split over several plates', 0],
+                ]],
+                $extras,
+            ],
+            in_array($category, ['lamb', 'chicken'], true) && empty($item['options']) => [$rice(false), $extras],
+            $category === 'fish' => [$extras],
+            default => [],
+        };
+    }
+
     public function run(): void
     {
         User::updateOrCreate(
@@ -63,6 +95,15 @@ class DatabaseSeeder extends Seeder
                 $item->options()->delete();
                 foreach ($i['options'] as $oi => $o) {
                     $item->options()->create($o + ['sort' => $oi]);
+                }
+                $item->addonGroups()->delete();
+                foreach ($this->addonGroups($c['slug'], $i) as $gi => [$gar, $gen, $multiple, $required, $addons]) {
+                    $group = $item->addonGroups()->create([
+                        'name_ar' => $gar, 'name_en' => $gen, 'multiple' => $multiple, 'required' => $required, 'sort' => $gi,
+                    ]);
+                    foreach ($addons as $ai => [$aar, $aen, $price]) {
+                        $group->addons()->create(['name_ar' => $aar, 'name_en' => $aen, 'price' => $price, 'sort' => $ai]);
+                    }
                 }
             }
         }

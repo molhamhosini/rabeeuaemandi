@@ -9,12 +9,15 @@
   const count = () => cart.reduce((a, l) => a + l.qty, 0);
   const total = () => cart.reduce((a, l) => a + l.qty * l.price, 0);
 
-  function add(item, option) {
-    const key = item.id + ':' + (option ? option.id : '');
+  // addons: [{id, name, price}] picked in the sheet (rice type, serving, extras)
+  function add(item, option, addons = []) {
+    const ids = addons.map(a => a.id).sort((a, b) => a - b);
+    const key = item.id + ':' + (option ? option.id : '') + ':' + ids.join(',');
     const ex = cart.find(l => l.key === key);
     if (ex) ex.qty++;
-    else cart.push({key, item_id: item.id, option_id: option ? option.id : null, name: item.name, option: option ? option.name : null,
-      price: option ? option.price : item.price, image: item.image, qty: 1});
+    else cart.push({key, item_id: item.id, option_id: option ? option.id : null, addon_ids: ids, name: item.name,
+      option: option ? option.name : null, details: addons.map(a => a.name).join('، '),
+      price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, qty: 1});
     save(); toast(S.t.added);
   }
 
@@ -36,7 +39,7 @@
       box.innerHTML = cart.map((l, i) => `
         <div class="line">
           ${l.image ? `<img src="${esc(l.image)}" alt="">` : ''}
-          <div class="nm"><b>${esc(l.name)}</b>${l.option ? `<small>${esc(l.option)}</small><br>` : ''}<small>${money(l.price)} ${esc(S.aed)}</small></div>
+          <div class="nm"><b>${esc(l.name)}</b>${l.option ? `<small>${esc(l.option)}</small><br>` : ''}${l.details ? `<small class="det">${esc(l.details)}</small>` : ''}<small>${money(l.price)} ${esc(S.aed)}</small></div>
           <div class="qty"><button type="button" data-dec="${i}" aria-label="-">−</button><span>${l.qty}</span><button type="button" data-inc="${i}" aria-label="+">+</button></div>
         </div>`).join('');
     });
@@ -45,35 +48,82 @@
   }
 
   // drawer + option sheet
-  const scrim = $('[data-scrim]'), drawer = $('[data-drawer]'), sheet = $('[data-sheet]');
+  const scrim = $('[data-scrim]'), drawer = $('[data-drawer]'), sheet = $('[data-sheet]'), mnav = $('[data-mnav]');
   const open = el => { el.classList.add('open'); scrim.classList.add('open'); document.body.style.overflow = 'hidden'; };
-  const closeAll = () => { [drawer, sheet, scrim].forEach(e => e && e.classList.remove('open')); document.body.style.overflow = ''; };
+  const closeAll = () => { [drawer, sheet, scrim, mnav].forEach(e => e && e.classList.remove('open')); document.body.style.overflow = ''; };
   scrim && scrim.addEventListener('click', closeAll);
   document.addEventListener('keydown', e => e.key === 'Escape' && closeAll());
 
+  const plus = v => v > 0 ? `+${money(v)} <small>${esc(S.aed)}</small>` : '';
+  const head = (title, required) => `<div class="grp-h"><b>${esc(title)}</b><span class="${required ? 'req' : 'opt-l'}">${esc(required ? S.t.required : S.t.optional)}</span></div>`;
+
   function openOptions(item) {
+    const groups = item.groups || [];
     sheet.innerHTML = `
       <div class="ph${item.image && /\/(photos|menu)\//.test(item.image) ? ' menu' : ''}">${item.image ? `<img src="${esc(item.image)}" alt="">` : ''}<button class="x" data-close>&times;</button></div>
       <div class="in">
         <h3 style="font-size:1.4rem">${esc(item.name)}</h3>
-        ${item.desc ? `<p style="color:var(--muted);margin:4px 0 14px">${esc(item.desc)}</p>` : '<div style="height:12px"></div>'}
-        ${item.options.map((o, i) => `<div class="opt"><label><input type="radio" name="opt" value="${i}" ${i === 0 ? 'checked' : ''}>${esc(o.name)}</label><span class="price">${money(o.price)} <small>${esc(S.aed)}</small></span></div>`).join('')}
-        <button class="btn btn-primary btn-block" data-confirm style="margin-top:8px">+ ${esc(S.t.add)}</button>
+        ${item.desc ? `<p style="color:var(--muted);margin:4px 0 6px">${esc(item.desc)}</p>` : ''}
+        ${item.options.length ? `<div class="grp">${head(S.t.chooseOne, true)}
+          ${item.options.map((o, i) => `<label class="opt"><span class="l"><input type="radio" name="opt" value="${i}" ${i === 0 ? 'checked' : ''}>${esc(o.name)}</span><span class="price">${money(o.price)} <small>${esc(S.aed)}</small></span></label>`).join('')}</div>` : ''}
+        ${groups.map((g, gi) => `<div class="grp" data-g="${gi}">${head(g.name, g.required)}
+          ${g.addons.map((a, ai) => `<label class="opt"><span class="l"><input type="${g.multiple ? 'checkbox' : 'radio'}" name="g${gi}" value="${ai}">${esc(a.name)}</span><span class="price">${plus(a.price)}</span></label>`).join('')}</div>`).join('')}
+        <button class="btn btn-primary btn-block" data-confirm style="margin-top:8px"></button>
       </div>`;
     open(sheet);
-    $('[data-confirm]', sheet).onclick = () => { const i = +$('input[name=opt]:checked', sheet).value; add(item, item.options[i]); closeAll(); };
+
+    const btn = $('[data-confirm]', sheet);
+    const picked = () => {
+      const oi = $('input[name=opt]:checked', sheet);
+      const option = item.options.length ? item.options[+(oi ? oi.value : 0)] : null;
+      const addons = [];
+      let missing = null;
+      groups.forEach((g, gi) => {
+        const sel = $$(`input[name=g${gi}]:checked`, sheet).map(x => g.addons[+x.value]);
+        if (g.required && !sel.length && missing === null) missing = gi;
+        addons.push(...sel);
+      });
+      return {option, addons, missing};
+    };
+    const refresh = () => {
+      const {option, addons, missing} = picked();
+      const total = (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0);
+      btn.innerHTML = `+ ${esc(S.t.add)} · ${money(total)} <small>${esc(S.aed)}</small>`;
+      btn.classList.toggle('muted', missing !== null);
+    };
+    // an optional single-choice group can be cleared by tapping the chosen one again
+    $$('.grp[data-g] input[type=radio]', sheet).forEach(r => r.addEventListener('click', () => {
+      const g = groups[+r.closest('.grp').dataset.g];
+      if (!g.required && r.dataset.was === '1') r.checked = false;
+      $$(`input[name="${r.name}"]`, sheet).forEach(x => { x.dataset.was = x.checked ? '1' : ''; });
+      refresh();
+    }));
+    sheet.onchange = refresh;
+    refresh();
+
+    btn.onclick = () => {
+      const {option, addons, missing} = picked();
+      if (missing !== null) {
+        const box = $(`.grp[data-g="${missing}"]`, sheet);
+        box.classList.remove('need'); void box.offsetWidth; box.classList.add('need');
+        box.scrollIntoView({block: 'center', behavior: 'smooth'});
+        return;
+      }
+      add(item, option, addons); closeAll();
+    };
   }
 
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-add],[data-open-cart],[data-close],[data-inc],[data-dec]');
+    const t = e.target.closest('[data-add],[data-open-cart],[data-open-nav],[data-close],[data-inc],[data-dec]');
     if (!t) return;
-    if (t.matches('[data-open-cart]')) { render(); open(drawer); }
+    if (t.matches('[data-open-nav]')) open(mnav);
+    else if (t.matches('[data-open-cart]')) { e.preventDefault(); if (mnav) mnav.classList.remove('open'); render(); open(drawer); }
     else if (t.matches('[data-close]')) closeAll();
     else if (t.matches('[data-inc]')) { cart[+t.dataset.inc].qty++; save(); }
     else if (t.matches('[data-dec]')) { const l = cart[+t.dataset.dec]; if (--l.qty <= 0) cart.splice(+t.dataset.dec, 1); save(); }
     else if (t.matches('[data-add]')) {
       const item = (window.ITEMS || {})[t.dataset.add]; if (!item) return;
-      if (item.options && item.options.length) openOptions(item);
+      if ((item.options && item.options.length) || (item.groups && item.groups.length)) openOptions(item);
       else { add(item, null); t.classList.add('done'); setTimeout(() => t.classList.remove('done'), 700); }
     }
   });
@@ -88,7 +138,7 @@
       const err = $('[data-err]', form), btn = $('[data-submit]', form);
       err.hidden = true;
       const body = Object.fromEntries(new FormData(form).entries());
-      body.items = cart.map(l => ({item_id: l.item_id, option_id: l.option_id, quantity: l.qty}));
+      body.items = cart.map(l => ({item_id: l.item_id, option_id: l.option_id, addon_ids: l.addon_ids || [], quantity: l.qty}));
       const label = btn.textContent; btn.disabled = true; btn.textContent = S.t.sending;
       try {
         const res = await fetch(form.dataset.action, {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json',

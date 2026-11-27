@@ -22,6 +22,23 @@
       </div>
     @endfor
   </div>
+  <div class="field"><label>{{ __('site.admin.addon_groups') }}</label><small style="color:var(--muted)">{{ __('site.admin.addon_hint') }}</small>
+    @php($groups = $item->addonGroups ?? collect())
+    @for($n = 0; $n < $groups->count() + 2; $n++)
+      @php($g = $groups[$n] ?? null)
+      <div style="border:1px solid #EADCBD;border-radius:12px;padding:10px;margin-top:8px">
+        <div class="two">
+          <input name="groups[{{ $n }}][name_ar]" placeholder="{{ __('site.admin.group_name_ar') }}" value="{{ $g?->name_ar }}">
+          <input name="groups[{{ $n }}][name_en]" placeholder="{{ __('site.admin.group_name_en') }}" value="{{ $g?->name_en }}" dir="ltr">
+        </div>
+        <div style="display:flex;gap:18px;margin:8px 0">
+          <label style="display:flex;gap:6px"><input type="checkbox" name="groups[{{ $n }}][required]" value="1" @checked($g?->required)> {{ __('site.required') }}</label>
+          <label style="display:flex;gap:6px"><input type="checkbox" name="groups[{{ $n }}][multiple]" value="1" @checked($g?->multiple)> {{ __('site.admin.multiple') }}</label>
+        </div>
+        <textarea name="groups[{{ $n }}][lines]" rows="4" placeholder="{{ __('site.admin.addon_lines_ph') }}" style="width:100%">{{ $g ? $g->addons->map(fn ($a) => $a->name_ar.' | '.$a->name_en.' | '.\App\Services\OrderService::money($a->price))->join("\n") : '' }}</textarea>
+      </div>
+    @endfor
+  </div>
   <div class="field"><label>{{ __('site.admin.image') }}</label>@if($item->image)<img class="thumb" style="width:120px;height:90px" src="{{ $item->imageUrl() }}" alt="">@endif<input type="file" name="image" accept="image/*"></div>
   <label style="display:flex;gap:8px;margin:6px 0"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $item->is_active ?? true))> {{ __('site.admin.active') }}</label>
   <label style="display:flex;gap:8px;margin:6px 0 16px"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $item->is_featured))> {{ __('site.admin.featured') }}</label>

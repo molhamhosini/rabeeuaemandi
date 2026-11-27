@@ -9,12 +9,16 @@ import 'models.dart';
 class CartLine {
   final MenuItem item;
   final ItemOption? option;
+  final List<Addon> addons;
   int qty;
-  CartLine(this.item, this.option, this.qty);
+  CartLine(this.item, this.option, this.qty, [this.addons = const []]);
 
-  double get unitPrice => option?.price ?? item.price ?? 0;
+  double get unitPrice => (option?.price ?? item.price ?? 0) + addons.fold(0.0, (a, x) => a + x.price);
   double get total => unitPrice * qty;
-  String get key => '${item.id}:${option?.id ?? ''}';
+  String get key => lineKey(item, option, addons);
+
+  static String lineKey(MenuItem item, ItemOption? option, List<Addon> addons) =>
+      '${item.id}:${option?.id ?? ''}:${(addons.map((a) => a.id).toList()..sort()).join(',')}';
 }
 
 /// Holds language, menu data and the cart. Widgets rebuild via ListenableBuilder.
@@ -64,13 +68,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void add(MenuItem item, [ItemOption? option]) {
-    final key = '${item.id}:${option?.id ?? ''}';
+  void add(MenuItem item, [ItemOption? option, List<Addon> addons = const []]) {
+    final key = CartLine.lineKey(item, option, addons);
     final ex = cart.where((l) => l.key == key);
     if (ex.isNotEmpty) {
       ex.first.qty++;
     } else {
-      cart.add(CartLine(item, option, 1));
+      cart.add(CartLine(item, option, 1, addons));
     }
     notifyListeners();
   }
@@ -108,7 +112,7 @@ class AppState extends ChangeNotifier {
         'address': address,
         'notes': notes,
         'payment_method': payment,
-        'items': cart.map((l) => {'item_id': l.item.id, 'option_id': l.option?.id, 'quantity': l.qty}).toList(),
+        'items': cart.map((l) => {'item_id': l.item.id, 'option_id': l.option?.id, 'addon_ids': l.addons.map((a) => a.id).toList(), 'quantity': l.qty}).toList(),
       };
 
   String encodeCart() => jsonEncode(cart.map((l) => l.key).toList());
