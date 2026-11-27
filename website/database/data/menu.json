@@ -1,0 +1,693 @@
+{
+ "categories": [
+  {
+   "slug": "banquets",
+   "name_ar": "العزائم والذبائح",
+   "name_en": "Banquets",
+   "items": [
+    {
+     "name_ar": "ذبيحة مندي",
+     "name_en": "Mandi",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": true
+    },
+    {
+     "name_ar": "ذبيحة مظبي",
+     "name_en": "Madhbi",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "ذبيحة مغلي",
+     "name_en": "Maghli",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "ذبيحة زربيان",
+     "name_en": "Zirbyan",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "ذبيحة غوزي",
+     "name_en": "Ghouzi",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "ذبيحة محشي",
+     "name_en": "Mahshi",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "ذبيحة مفطح",
+     "name_en": "Mufattah",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "خاروف نعيمي",
+       "name_en": "Naeemi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "خروف نجدي",
+       "name_en": "Najdi lamb",
+       "price": 1570
+      },
+      {
+       "name_ar": "تيس",
+       "name_en": "Goat (Tais)",
+       "price": 1225
+      }
+     ],
+     "description_ar": "تأتي الذبيحة مع العيش، اختر نوع الذبيحة",
+     "description_en": "Whole lamb served on rice. Choose the type of lamb",
+     "image": "banquet",
+     "featured": false
+    },
+    {
+     "name_ar": "خدمة طبخ القاعود بدون أرز",
+     "name_en": "Cooking service of Hump",
+     "price": 450,
+     "options": [],
+     "image": "lamb-platter",
+     "featured": false
+    }
+   ],
+   "note_ar": "أسعار الذبائح حسب النوع: نعيمي ونجدي 1570 درهم، تيس 1225 درهم",
+   "note_en": "Prices by type: Naeemi & Najdi 1570 AED, Goat 1225 AED"
+  },
+  {
+   "slug": "cooking-service",
+   "name_ar": "خدمة الطبخ",
+   "name_en": "Cooking Service",
+   "items": [
+    {
+     "name_ar": "طبخ الذبيحة مندي",
+     "name_en": "Lamb Cooking As Mandi",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    },
+    {
+     "name_ar": "طبخ الذبيحة مغلي وتحمير",
+     "name_en": "Lamb Cooking As Boiled",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    },
+    {
+     "name_ar": "طبخ الذبيحة زربيان",
+     "name_en": "Lamb Cooking As Zirbyan",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    },
+    {
+     "name_ar": "طبخ الذبيحة مدفون",
+     "name_en": "Lamb Cooking As Madfoon",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    },
+    {
+     "name_ar": "طبخ الذبيحة مقلقل",
+     "name_en": "Lamb Cooking As Mukalkal",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    },
+    {
+     "name_ar": "طبخ الذبيحة مظبي",
+     "name_en": "Lamb Cooking As Madhbi",
+     "price": 150,
+     "options": [],
+     "image": "cooking-service",
+     "featured": false
+    }
+   ],
+   "note_ar": "خدمة طبخ ذبيحتك الخاصة",
+   "note_en": "We cook your own lamb"
+  },
+  {
+   "slug": "lamb",
+   "name_ar": "اللحم",
+   "name_en": "Lamb",
+   "items": [
+    {
+     "name_ar": "لحم مندي",
+     "name_en": "Mandi Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-mandi",
+     "featured": true
+    },
+    {
+     "name_ar": "لحم مدفون",
+     "name_en": "Madfoon Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-madfoon",
+     "featured": true
+    },
+    {
+     "name_ar": "لحم مظبي",
+     "name_en": "Madhbi Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-madhbi",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم زربيان",
+     "name_en": "Zirbyan Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-zirbyan",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم بخاري",
+     "name_en": "Bukhari Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-bukhari",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم حاشي",
+     "name_en": "Hashi Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-hashi",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم حنيذ",
+     "name_en": "Haneez Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-haneez",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم تنور",
+     "name_en": "Tanoor Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-tanoor",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم مقلقل",
+     "name_en": "Mukalkal Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-mukalkal",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم برمة",
+     "name_en": "Burma Lamb",
+     "price": 73,
+     "options": [],
+     "image": "lamb-burma",
+     "featured": false
+    },
+    {
+     "name_ar": "لحم وصلة",
+     "name_en": "Waslah Lamb",
+     "price": 40,
+     "options": [],
+     "image": "lamb-waslah",
+     "featured": false
+    },
+    {
+     "name_ar": "رأس مع عيش",
+     "name_en": "Head with rice",
+     "price": 30,
+     "options": [],
+     "image": "lamb-head",
+     "featured": false
+    },
+    {
+     "name_ar": "هريس لحم",
+     "name_en": "Harees Lamb",
+     "price": null,
+     "options": [
+      {
+       "name_ar": "صحن 20 درهم",
+       "name_en": "20 AED plate",
+       "price": 20
+      },
+      {
+       "name_ar": "صحن 25 درهم",
+       "name_en": "25 AED plate",
+       "price": 25
+      },
+      {
+       "name_ar": "صحن 35 درهم",
+       "name_en": "35 AED plate",
+       "price": 35
+      },
+      {
+       "name_ar": "صحن 50 درهم",
+       "name_en": "50 AED plate",
+       "price": 50
+      },
+      {
+       "name_ar": "صحن 100 درهم",
+       "name_en": "100 AED plate",
+       "price": 100
+      }
+     ],
+     "image": "harees",
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "chicken",
+   "name_ar": "الدجاج",
+   "name_en": "Chicken",
+   "items": [
+    {
+     "name_ar": "دجاج محشي كامل",
+     "name_en": "Whole Stuffed Chicken",
+     "price": 60,
+     "options": [],
+     "image": "chicken-stuffed",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج مندي",
+     "name_en": "Mandi Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-mandi",
+     "featured": true
+    },
+    {
+     "name_ar": "دجاج مظبي",
+     "name_en": "Madhbi Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-madhbi",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج مدفون",
+     "name_en": "Madfoon Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-madfoon",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج بخاري",
+     "name_en": "Bukhari Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-bukhari",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج حنيذ",
+     "name_en": "Haneeth Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-haneeth",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج مقلقل",
+     "name_en": "Mukalkal Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-mukalkal",
+     "featured": false
+    },
+    {
+     "name_ar": "دجاج برمة",
+     "name_en": "Burma Chicken",
+     "price": 30,
+     "options": [],
+     "image": "chicken-burma",
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "fish",
+   "name_ar": "السمك",
+   "name_en": "Fish",
+   "items": [
+    {
+     "name_ar": "سمك سبريم",
+     "name_en": "Suprem Fish",
+     "price": 43,
+     "options": [],
+     "image": "fish-suprem",
+     "featured": false
+    },
+    {
+     "name_ar": "سمك هامور",
+     "name_en": "Hamour Fish",
+     "price": 43,
+     "options": [],
+     "image": "fish-hamour",
+     "featured": true
+    },
+    {
+     "name_ar": "سمك كنعد",
+     "name_en": "Kingfish",
+     "price": 43,
+     "options": [],
+     "image": "fish-kingfish",
+     "featured": false
+    },
+    {
+     "name_ar": "سمك سلمون",
+     "name_en": "Salmon Fish",
+     "price": 45,
+     "options": [],
+     "image": "fish-salmon",
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "rice",
+   "name_ar": "العيش - الرز",
+   "name_en": "Rice",
+   "items": [
+    {
+     "name_ar": "أرز مندي",
+     "name_en": "Mandi Rice",
+     "price": 8,
+     "options": [],
+     "image": "rice-mandi",
+     "featured": false
+    },
+    {
+     "name_ar": "أرز زربيان",
+     "name_en": "Zirbyan Rice",
+     "price": 8,
+     "options": [],
+     "image": "rice-zirbyan",
+     "featured": false
+    },
+    {
+     "name_ar": "أرز كبسة",
+     "name_en": "Kabsah Rice",
+     "price": 8,
+     "options": [],
+     "image": "rice-kabsah",
+     "featured": false
+    },
+    {
+     "name_ar": "أرز بخاري",
+     "name_en": "Bukhari Rice",
+     "price": 8,
+     "options": [],
+     "image": "rice-bukhari",
+     "featured": false
+    },
+    {
+     "name_ar": "أرز بشاور",
+     "name_en": "Beshawer Rice",
+     "price": 8,
+     "options": [],
+     "image": "rice-beshawer",
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "salads",
+   "name_ar": "السلطات",
+   "name_en": "Salads",
+   "items": [
+    {
+     "name_ar": "سلطة جرجير",
+     "name_en": "Arugula Salad",
+     "price": 16,
+     "options": [],
+     "image": "salad-arugula",
+     "featured": false
+    },
+    {
+     "name_ar": "سلطة عربية",
+     "name_en": "Arabic Salad",
+     "price": 16,
+     "options": [],
+     "image": "salad-arabic",
+     "featured": false
+    },
+    {
+     "name_ar": "سلطة فتوش",
+     "name_en": "Fatoush Salad",
+     "price": 16,
+     "options": [],
+     "image": "salad-fatoush",
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "sweets",
+   "name_ar": "حلى",
+   "name_en": "Sweets",
+   "items": [
+    {
+     "name_ar": "كنافة قشطة",
+     "name_en": "Kunafa Cream",
+     "price": 16,
+     "options": [],
+     "image": "kunafa",
+     "featured": false
+    },
+    {
+     "name_ar": "كنافة جبن",
+     "name_en": "Kunafa Cheese",
+     "price": 16,
+     "options": [],
+     "image": "kunafa",
+     "featured": false
+    },
+    {
+     "name_ar": "كنافة مكس",
+     "name_en": "Kunafa Mix",
+     "price": 20,
+     "options": [],
+     "image": "kunafa",
+     "featured": true
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  },
+  {
+   "slug": "drinks",
+   "name_ar": "مشروبات",
+   "name_en": "Drinks",
+   "items": [
+    {
+     "name_ar": "روب خيار",
+     "name_en": "Yogurt Cucumber",
+     "price": 3,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "روب عادي",
+     "name_en": "Yogurt Normal",
+     "price": 2,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "مشروبات باردة",
+     "name_en": "Cold Drinks",
+     "price": 3,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "ماء صغير",
+     "name_en": "Water Small",
+     "price": 1,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "ماء كبير",
+     "name_en": "Water Large",
+     "price": 3,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "كولا كبير",
+     "name_en": "Big Cola",
+     "price": 10,
+     "options": [],
+     "image": null,
+     "featured": false
+    },
+    {
+     "name_ar": "كولا وسط",
+     "name_en": "Medium Cola",
+     "price": 7,
+     "options": [],
+     "image": null,
+     "featured": false
+    }
+   ],
+   "note_ar": null,
+   "note_en": null
+  }
+ ]
+}

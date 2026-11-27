@@ -1,0 +1,122 @@
+import 'dart:convert';
+
+import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'api.dart';
+import 'models.dart';
+
+class CartLine {
+  final MenuItem item;
+  final ItemOption? option;
+  int qty;
+  CartLine(this.item, this.option, this.qty);
+
+  double get unitPrice => option?.price ?? item.price ?? 0;
+  double get total => unitPrice * qty;
+  String get key => '${item.id}:${option?.id ?? ''}';
+}
+
+/// Holds language, menu data and the cart. Widgets rebuild via ListenableBuilder.
+class AppState extends ChangeNotifier {
+  final Api api;
+  AppState(this.api);
+
+  String lang = 'ar';
+  bool loading = true;
+  String? error;
+  AppConfig config = AppConfig(false, '');
+  List<Category> categories = [];
+  List<Branch> branches = [];
+  final List<CartLine> cart = [];
+  final List<String> myOrders = [];
+
+  List<MenuItem> get featured => categories.expand((c) => c.items).where((i) => i.featured).toList();
+  int get count => cart.fold(0, (a, l) => a + l.qty);
+  double get subtotal => cart.fold(0.0, (a, l) => a + l.total);
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    lang = prefs.getString('lang') ?? 'ar';
+    myOrders.addAll(prefs.getStringList('orders') ?? []);
+    await load();
+  }
+
+  Future<void> load() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      final r = await Future.wait([api.config(lang), api.menu(lang), api.branches(lang)]);
+      config = r[0] as AppConfig;
+      categories = r[1] as List<Category>;
+      branches = r[2] as List<Branch>;
+    } catch (e) {
+      error = '$e';
+    }
+    loading = false;
+    notifyListeners();
+  }
+
+  Future<void> toggleLang() async {
+    lang = lang == 'ar' ? 'en' : 'ar';
+    (await SharedPreferences.getInstance()).setString('lang', lang);
+    notifyListeners();
+  }
+
+  void add(MenuItem item, [ItemOption? option]) {
+    final key = '${item.id}:${option?.id ?? ''}';
+    final ex = cart.where((l) => l.key == key);
+    if (ex.isNotEmpty) {
+      ex.first.qty++;
+    } else {
+      cart.add(CartLine(item, option, 1));
+    }
+    notifyListeners();
+  }
+
+  void changeQty(CartLine line, int delta) {
+    line.qty += delta;
+    if (line.qty <= 0) cart.remove(line);
+    notifyListeners();
+  }
+
+  void clearCart() {
+    cart.clear();
+    notifyListeners();
+  }
+
+  Future<void> rememberOrder(String code) async {
+    myOrders.insert(0, code);
+    (await SharedPreferences.getInstance()).setStringList('orders', myOrders.take(20).toList());
+  }
+
+  Map<String, dynamic> orderBody({
+    required int branchId,
+    required String name,
+    required String phone,
+    required String fulfillment,
+    required String address,
+    required String notes,
+    required String payment,
+  }) =>
+      {
+        'branch_id': branchId,
+        'customer_name': name,
+        'customer_phone': phone,
+        'fulfillment': fulfillment,
+        'address': address,
+        'notes': notes,
+        'payment_method': payment,
+        'items': cart.map((l) => {'item_id': l.item.id, 'option_id': l.option?.id, 'quantity': l.qty}).toList(),
+      };
+
+  String encodeCart() => jsonEncode(cart.map((l) => l.key).toList());
+}
+
+class AppScope extends InheritedNotifier<AppState> {
+  const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
+
+  static AppState of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
+  static AppState read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
+}
