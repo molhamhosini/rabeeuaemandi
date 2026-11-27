@@ -1,0 +1,5 @@
+# Send every request to Laravel's public folder (the document root is public_html)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
