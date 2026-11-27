@@ -8,6 +8,7 @@
     · <a class="link" href="https://wa.me/{{ preg_replace('/^0/', '971', preg_replace('/\D/', '', $order->customer_phone)) }}" target="_blank">WhatsApp</a></p>
     <p>{{ $order->fulfillment === 'delivery' ? __('site.checkout.delivery').': '.$order->address : __('site.checkout.pickup') }}</p>
     @if($order->notes)<p>{{ __('site.checkout.notes') }}: {{ $order->notes }}</p>@endif
+    <p style="font-size:1.1rem">{{ __('site.schedule.title') }}: <b>{{ $order->whenText() }}</b></p>
     <p>{{ $order->branch->tr('name') }} · {{ $order->created_at->timezone('Asia/Dubai')->format('d/m/Y H:i') }}</p>
   </div>
   <form class="card" method="post" action="{{ route('admin.orders.update', $order) }}">

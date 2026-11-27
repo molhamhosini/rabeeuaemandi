@@ -79,6 +79,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The most notice any dish in the cart needs, in hours.
+  int get leadHours => cart.fold(0, (m, l) => l.item.leadHours > m ? l.item.leadHours : m);
+
   void changeQty(CartLine line, int delta) {
     line.qty += delta;
     if (line.qty <= 0) cart.remove(line);
@@ -103,6 +106,7 @@ class AppState extends ChangeNotifier {
     required String address,
     required String notes,
     required String payment,
+    String? scheduledAt,
   }) =>
       {
         'branch_id': branchId,
@@ -112,6 +116,7 @@ class AppState extends ChangeNotifier {
         'address': address,
         'notes': notes,
         'payment_method': payment,
+        if (scheduledAt != null) 'scheduled_at': scheduledAt,
         'items': cart.map((l) => {'item_id': l.item.id, 'option_id': l.option?.id, 'addon_ids': l.addons.map((a) => a.id).toList(), 'quantity': l.qty}).toList(),
       };
 

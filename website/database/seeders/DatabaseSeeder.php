@@ -81,6 +81,8 @@ class DatabaseSeeder extends Seeder
             $category = Category::updateOrCreate(['slug' => $c['slug']], [
                 'name_ar' => $c['name_ar'], 'name_en' => $c['name_en'],
                 'note_ar' => $c['note_ar'] ?? null, 'note_en' => $c['note_en'] ?? null, 'sort' => $ci,
+                // whole lambs need to be booked 3 hours ahead
+                'lead_hours' => $c['slug'] === 'banquets' ? 3 : 0,
             ]);
             foreach ($c['items'] as $ii => $i) {
                 $item = $category->items()->updateOrCreate(['name_en' => $i['name_en']], [

@@ -61,6 +61,8 @@ class MenuItem {
   final bool featured;
   final List<ItemOption> options;
   final List<AddonGroup> addonGroups;
+  /// Hours of notice the dish needs (whole lambs: 3); 0 = can be made right away.
+  final int leadHours;
 
   MenuItem({
     required this.id,
@@ -72,6 +74,7 @@ class MenuItem {
     required this.featured,
     required this.options,
     this.addonGroups = const [],
+    this.leadHours = 0,
   });
 
   bool get hasOptions => options.isNotEmpty;
@@ -94,6 +97,7 @@ class MenuItem {
         featured: j['featured'] == true,
         options: ((j['options'] as List?) ?? []).map((o) => ItemOption.fromJson(o)).toList(),
         addonGroups: ((j['addon_groups'] as List?) ?? []).map((g) => AddonGroup.fromJson(g)).toList(),
+        leadHours: (j['lead_hours'] as num?)?.toInt() ?? 0,
       );
 }
 

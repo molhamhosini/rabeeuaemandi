@@ -48,6 +48,7 @@ class OrderingTest extends TestCase
             'fulfillment' => 'delivery',
             'address' => 'Villa 1',
             'payment_method' => 'whatsapp',
+            'scheduled_at' => now('Asia/Dubai')->addHours(4)->format('Y-m-d\TH:i'),
             'items' => [
                 ['item_id' => $lamb->id, 'quantity' => 2, 'price' => 1], // client price must be ignored
                 ['item_id' => $banquet->id, 'option_id' => $goat->id, 'quantity' => 1, 'addon_ids' => [
@@ -63,6 +64,8 @@ class OrderingTest extends TestCase
         $this->assertStringContainsString(rawurlencode('إضافات: شتني إضافي ×2، روب إضافي'), $res['redirect']);
         $this->assertStringStartsWith('https://wa.me/971581404800?text=', $res['redirect']);
         $this->assertStringContainsString(rawurlencode('ذبيحة مندي - تيس'), $res['redirect']);
+        $this->assertStringContainsString(rawurlencode('الموعد: '), $res['redirect']);
+        $this->assertNotNull($res['order']['scheduled_at']);
     }
 
     public function test_item_with_options_requires_an_option(): void
@@ -75,6 +78,33 @@ class OrderingTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_banquet_must_be_booked_three_hours_ahead(): void
+    {
+        $banquet = Item::where('name_en', 'Mandi')->first();
+        $groups = $banquet->addonGroups()->with('addons')->get();
+        $ids = [$groups->firstWhere('name_en', 'Rice type')->addons[0]->id, $groups->firstWhere('name_en', 'Serving')->addons[0]->id];
+        $order = fn (?string $at, ?Item $item = null) => $this->postJson('/api/v1/orders', array_filter([
+            'branch_id' => Branch::first()->id, 'customer_name' => 'T', 'customer_phone' => '0501234567',
+            'fulfillment' => 'pickup', 'payment_method' => 'whatsapp', 'scheduled_at' => $at,
+            'items' => [$item
+                ? ['item_id' => $item->id, 'quantity' => 1]
+                : ['item_id' => $banquet->id, 'option_id' => $banquet->options()->value('id'), 'quantity' => 1, 'addon_ids' => $ids]],
+        ]));
+        $at = fn (int $minutes) => now('Asia/Dubai')->addMinutes($minutes)->format('Y-m-d\TH:i');
+
+        $order(null)->assertStatus(422)->assertJsonValidationErrors('scheduled_at');   // banquet "as soon as possible"
+        $order($at(120))->assertStatus(422)->assertJsonValidationErrors('scheduled_at'); // only 2 hours ahead
+        $order($at(60 * 24 * 40))->assertStatus(422);                                    // too far ahead
+        $res = $order($at(200))->assertCreated()->json();
+        $this->assertEqualsWithDelta(now()->addMinutes(200)->timestamp, \Carbon\Carbon::parse($res['order']['scheduled_at'])->timestamp, 60);
+
+        // a normal plate can still be ordered right away, or later today
+        $plate = Item::where('name_en', 'Mandi Lamb')->first();
+        $this->assertNull($order(null, $plate)->assertCreated()->json('order.scheduled_at'));
+        $order($at(45), $plate)->assertCreated();
+        $order($at(-60), $plate)->assertStatus(422);                                     // in the past
+    }
+
     public function test_banquet_needs_rice_and_serving_and_rejects_foreign_addons(): void
     {
         $banquet = Item::where('name_en', 'Mandi')->first();
@@ -84,7 +114,7 @@ class OrderingTest extends TestCase
         $serving = $groups->firstWhere('name_en', 'Serving')->addons;
         $order = fn (array $ids) => $this->postJson('/api/v1/orders', [
             'branch_id' => Branch::first()->id, 'customer_name' => 'T', 'customer_phone' => '0501234567',
-            'fulfillment' => 'pickup', 'payment_method' => 'whatsapp',
+            'fulfillment' => 'pickup', 'payment_method' => 'whatsapp', 'scheduled_at' => now('Asia/Dubai')->addHours(5)->format('Y-m-d\TH:i'),
             'items' => [['item_id' => $banquet->id, 'option_id' => $banquet->options()->value('id'), 'quantity' => 1, 'addon_ids' => $ids]],
         ]);
 
