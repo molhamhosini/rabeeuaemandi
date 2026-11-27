@@ -14,7 +14,7 @@
   <tr><th>#</th><th>{{ __('site.admin.time') }}</th><th>{{ __('site.admin.customer') }}</th><th>{{ __('site.checkout.branch') }}</th><th>{{ __('site.cart.total') }}</th><th>{{ __('site.order.payment') }}</th><th>{{ __('site.order.status') }}</th><th>{{ __('site.admin.source') }}</th></tr>
   @forelse($orders as $o)
   <tr onclick="location='{{ route('admin.orders.show', $o) }}'" style="cursor:pointer">
-    <td dir="ltr"><b>{{ $o->code }}</b></td>
+    <td dir="ltr"><b>{{ $o->number }}</b></td>
     <td>{{ $o->created_at->timezone('Asia/Dubai')->format('d/m H:i') }}@if($o->scheduled_at)<br><small style="color:#9A6E3B;font-weight:700">⏰ {{ $o->scheduled_at->copy()->timezone('Asia/Dubai')->format('d/m H:i') }}</small>@endif</td>
     <td>{{ $o->customer_name }}<br><small dir="ltr">{{ $o->customer_phone }}</small></td>
     <td>{{ $o->branch->tr('name') }}</td>

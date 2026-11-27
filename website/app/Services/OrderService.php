@@ -215,7 +215,7 @@ class OrderService
     {
         $ar = $order->locale !== 'en';
         $lines = [];
-        $lines[] = $ar ? "طلب جديد #{$order->code}" : "New order #{$order->code}";
+        $lines[] = $ar ? "طلب جديد #{$order->number}" : "New order #{$order->number}";
         $lines[] = ($ar ? 'الفرع: ' : 'Branch: ').($ar ? $order->branch->name_ar : $order->branch->name_en);
         $lines[] = ($ar ? 'الموعد: ' : 'Time: ').$order->whenText($ar ? 'ar' : 'en');
         $lines[] = '';

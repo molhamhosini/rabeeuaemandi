@@ -72,6 +72,9 @@ class OrderingTest extends TestCase
         $this->assertStringStartsWith('https://wa.me/971581404800?text=', $res['redirect']);
         $this->assertStringContainsString(rawurlencode('ذبيحة مندي - تيس'), $res['redirect']);
         $this->assertStringContainsString(rawurlencode('الموعد: '), $res['redirect']);
+        // order number people can read out: 00001
+        $this->assertMatchesRegularExpression('/^\d{5}$/', $res['order']['number']);
+        $this->assertStringContainsString(rawurlencode('طلب جديد #'.$res['order']['number']), $res['redirect']);
         $this->assertNotNull($res['order']['scheduled_at']);
     }
 

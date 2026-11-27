@@ -1,12 +1,12 @@
 @extends('layouts.site')
-@section('title', __('site.order.title').' '.$order->code)
+@section('title', __('site.order.title').' '.$order->number)
 @section('content')
 @php($en = app()->getLocale() === 'en')
 <div class="wrap" style="max-width:640px;padding-top:40px;padding-bottom:60px">
   <div class="card" style="text-align:center">
     <div class="ok-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
     <h1 style="font-size:1.8rem">{{ __('site.order.thanks') }}</h1>
-    <p style="color:var(--muted);margin:6px 0 14px">{{ __('site.order.title') }} <b dir="ltr">#{{ $order->code }}</b> · {{ $en ? $order->branch->name_en : $order->branch->name_ar }}</p>
+    <p style="color:var(--muted);margin:6px 0 14px">{{ __('site.order.title') }} <b dir="ltr">#{{ $order->number }}</b> · {{ $en ? $order->branch->name_en : $order->branch->name_ar }}</p>
     <p class="when-line">{{ __('site.schedule.title') }}: <b>{{ $order->whenText() }}</b></p>
     <p>
       <span class="pill">{{ __('site.order.status') }}: {{ __('site.order.statuses.'.$order->status) }}</span>

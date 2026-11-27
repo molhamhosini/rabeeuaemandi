@@ -38,7 +38,7 @@ class _OrderScreenState extends State<OrderScreen> {
     final l = AppScope.of(context).lang;
     final o = order;
     return Scaffold(
-      appBar: AppBar(title: Text('${tr('order_no', l)} #${widget.code}')),
+      appBar: AppBar(title: Text('${tr('order_no', l)}${o?['number'] != null ? ' #${o!['number']}' : ''}')),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.all(20), children: [

@@ -1,6 +1,6 @@
 @extends('admin.layout')
 @section('content')
-<h1>{{ __('site.order.title') }} <span dir="ltr">#{{ $order->code }}</span></h1>
+<h1>{{ __('site.order.title') }} <span dir="ltr">#{{ $order->number }}</span></h1>
 <div class="two">
   <div class="card">
     <h3>{{ __('site.admin.customer') }}</h3>
