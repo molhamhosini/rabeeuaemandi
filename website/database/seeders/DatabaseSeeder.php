@@ -51,7 +51,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::updateOrCreate(
+        // only creates the admin the first time; running the seeder again must never reset the password
+        User::firstOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@rabeeuaemandi.com')],
             ['name' => 'Admin', 'password' => Hash::make(env('ADMIN_PASSWORD', 'change-me-now')), 'is_admin' => true]
         );

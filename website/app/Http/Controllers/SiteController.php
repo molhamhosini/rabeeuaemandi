@@ -50,7 +50,7 @@ class SiteController extends Controller
             ? $orders->stripeCheckoutUrl($order)
             : $orders->whatsappUrl($order);
 
-        return response()->json(['order' => $order->code, 'redirect' => $redirect, 'status_url' => route('order.show', $order)]);
+        return response()->json(['order' => $order->code, 'number' => $order->number, 'redirect' => $redirect, 'status_url' => route('order.show', $order)]);
     }
 
     public function order(Order $order, OrderService $orders)

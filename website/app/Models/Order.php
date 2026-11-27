@@ -14,7 +14,14 @@ class Order extends Model
 
     public function items() { return $this->hasMany(OrderItem::class); }
 
+    // the link to an order uses the random code, so nobody can open other people's orders by counting
     public function getRouteKeyName(): string { return 'code'; }
+
+    /** Order number people see and say on the phone: 00001, 00002, ... */
+    public function getNumberAttribute(): string
+    {
+        return str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
+    }
 
     /** "Saturday 28 November, 7:30 PM" in Abu Dhabi time, or "As soon as possible". */
     public function whenText(?string $locale = null): string
@@ -28,6 +35,7 @@ class Order extends Model
     {
         return [
             'code' => $this->code,
+            'number' => $this->number,
             'status' => $this->status,
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
