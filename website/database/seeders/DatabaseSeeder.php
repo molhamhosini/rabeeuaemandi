@@ -10,13 +10,16 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /** Real photos the owner sent (2026-11-28), on the same background; they win over the PSD cut-outs. */
+    /** Real photos the owner sent (2026-11-28) for dishes that have no rice question. Meals with rice keep the
+     *  printed-menu (PSD) picture; the owner's plates without rice go on their "without rice" twins below. */
     public const PHOTOS = [
         'Yogurt Normal' => 'yogurt', 'Yogurt Cucumber' => 'yogurt', 'Cold Drinks' => 'cold-drinks',
-        'Suprem Fish' => 'fish-suprem-plate', 'Hamour Fish' => 'fish-hamour-plate', 'Salmon Fish' => 'fish-salmon-plate',
-        'Madfoon Lamb' => 'lamb-madfoon-plate', 'Madhbi Lamb' => 'lamb-madhbi-plate', 'Zirbyan Lamb' => 'lamb-zirbyan-plate',
-        'Burma Lamb' => 'lamb-burma-plate', 'Head with rice' => 'lamb-head-plate', 'Mukalkal Lamb' => 'lamb-mukalkal-plate',
-        'Mandi Chicken' => 'chicken-mandi-plate', 'Madhbi Chicken' => 'chicken-madhbi-plate', 'Madfoon Chicken' => 'chicken-madfoon-plate',
+    ];
+
+    /** Dishes whose photo PHOTOS used to replace with a plate without rice (undone by migration 000700). */
+    public const RICE_PSD_RESTORED = [
+        'Suprem Fish', 'Hamour Fish', 'Salmon Fish', 'Madfoon Lamb', 'Madhbi Lamb', 'Zirbyan Lamb', 'Burma Lamb',
+        'Head with rice', 'Mukalkal Lamb', 'Mandi Chicken', 'Madhbi Chicken', 'Madfoon Chicken',
     ];
 
     /** Photos for the "without rice" dishes: the same dish with the rice plate taken out, or, where the meat
@@ -24,6 +27,9 @@ class DatabaseSeeder extends Seeder
     public const NO_RICE_PHOTOS = [
         'Suprem Fish' => 'fish-suprem-norice', 'Hamour Fish' => 'fish-hamour-norice', 'Salmon Fish' => 'fish-salmon-norice',
         'Mukalkal Lamb' => 'lamb-mukalkal-norice', 'Burma Chicken' => 'chicken-burma-norice',
+        'Madfoon Lamb' => 'lamb-madfoon-plate', 'Madhbi Lamb' => 'lamb-madhbi-plate', 'Zirbyan Lamb' => 'lamb-zirbyan-plate',
+        'Burma Lamb' => 'lamb-burma-plate',
+        'Mandi Chicken' => 'chicken-mandi-plate', 'Madhbi Chicken' => 'chicken-madhbi-plate', 'Madfoon Chicken' => 'chicken-madfoon-plate',
         'Mandi Lamb' => 'lamb-madhbi-plate', 'Bukhari Lamb' => 'lamb-madhbi-plate', 'Hashi Lamb' => 'lamb-madhbi-plate',
         'Haneez Lamb' => 'lamb-madhbi-plate', 'Tanoor Lamb' => 'lamb-madhbi-plate',
         'Bukhari Chicken' => 'chicken-mandi-plate', 'Haneeth Chicken' => 'chicken-mandi-plate',
