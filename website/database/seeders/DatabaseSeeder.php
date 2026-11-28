@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         'Yogurt Normal' => 'yogurt', 'Yogurt Cucumber' => 'yogurt', 'Cold Drinks' => 'cold-drinks',
         'Suprem Fish' => 'fish-suprem-plate', 'Hamour Fish' => 'fish-hamour-plate', 'Salmon Fish' => 'fish-salmon-plate',
         'Madfoon Lamb' => 'lamb-madfoon-plate', 'Madhbi Lamb' => 'lamb-madhbi-plate', 'Zirbyan Lamb' => 'lamb-zirbyan-plate',
-        'Burma Lamb' => 'lamb-burma-plate', 'Head with rice' => 'lamb-head-plate',
+        'Burma Lamb' => 'lamb-burma-plate', 'Head with rice' => 'lamb-head-plate', 'Mukalkal Lamb' => 'lamb-mukalkal-plate',
         'Mandi Chicken' => 'chicken-mandi-plate', 'Madhbi Chicken' => 'chicken-madhbi-plate', 'Madfoon Chicken' => 'chicken-madfoon-plate',
     ];
 
