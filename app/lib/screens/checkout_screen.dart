@@ -41,7 +41,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     // fill in what the account already knows
-    final c = AppScope.read(context).customer;
+    final st = AppScope.read(context);
+    final c = st.customer;
     if (c != null) {
       _name.text = c.name ?? '';
       _phone.text = c.phone;
@@ -49,6 +50,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _pin = c.location;
       _area = c.areaId;
       if (_pin == null && _area != null) _placeBy = 'area';
+    }
+    // what they chose after the splash wins: it is what the menu was filtered by
+    final p = st.place;
+    if (p != null) {
+      switch (p.kind) {
+        case 'pin':
+          _pin = (p.lat!, p.lng!);
+          _placeBy = 'map';
+        case 'area':
+          _area = p.areaId;
+          _placeBy = 'area';
+        default:
+          _fulfillment = 'pickup';
+      }
     }
   }
 

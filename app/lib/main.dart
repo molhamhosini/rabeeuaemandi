@@ -7,7 +7,9 @@ import 'screens/account_screen.dart';
 import 'screens/branches_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/location_gate.dart';
 import 'screens/menu_screen.dart';
+import 'screens/splash_screen.dart';
 import 'strings.dart';
 import 'theme.dart';
 
@@ -46,6 +48,16 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   int tab = 0;
   String? menuCategory;
+  /// The splash stays at least this long so the logo is seen, then until the menu has loaded.
+  bool _splashTimeUp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted) setState(() => _splashTimeUp = true);
+    });
+  }
 
   void setTab(int t, {String? category}) => setState(() {
         tab = t;
@@ -56,8 +68,12 @@ class _ShellState extends State<Shell> {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final l = s.lang;
+    final loaded = !(s.loading && s.categories.isEmpty);
+    if (!_splashTimeUp || (!loaded && s.error == null)) return const SplashScreen();
+    // first run: ask where to deliver before showing the menu
+    if (s.place == null && s.categories.isNotEmpty) return const LocationGate(firstRun: true);
     final Widget body;
-    if (s.loading && s.categories.isEmpty) {
+    if (!loaded) {
       body = const Center(child: CircularProgressIndicator(color: Brand.gold));
     } else if (s.error != null && s.categories.isEmpty) {
       body = Center(

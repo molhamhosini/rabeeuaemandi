@@ -52,6 +52,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -107,3 +108,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Native launch screen (shown by Android/iOS before Flutter starts), same look as SplashScreen.
+# Regenerate after changes: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#2A1C11"
+  image: assets/images/logo.png
+  android_12:
+    color: "#2A1C11"
+    image: assets/images/logo.png
+  web: false

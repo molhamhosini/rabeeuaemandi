@@ -225,3 +225,26 @@ class Customer {
         'location': location == null ? null : {'lat': location!.$1, 'lng': location!.$2},
       };
 }
+
+/// Where the customer wants the order: a map pin, an area from the list, or pickup at a branch.
+class DeliveryPlace {
+  final String kind; // pin | area | pickup
+  final double? lat;
+  final double? lng;
+  final int? areaId;
+  final int? branchId;
+  const DeliveryPlace.pin(double this.lat, double this.lng) : kind = 'pin', areaId = null, branchId = null;
+  const DeliveryPlace.area(int this.areaId) : kind = 'area', lat = null, lng = null, branchId = null;
+  const DeliveryPlace.pickup(int this.branchId) : kind = 'pickup', lat = null, lng = null, areaId = null;
+  const DeliveryPlace._(this.kind, this.lat, this.lng, this.areaId, this.branchId);
+
+  factory DeliveryPlace.fromJson(Map j) => DeliveryPlace._(
+        j['kind'] as String,
+        (j['lat'] as num?)?.toDouble(),
+        (j['lng'] as num?)?.toDouble(),
+        (j['area_id'] as num?)?.toInt(),
+        (j['branch_id'] as num?)?.toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {'kind': kind, 'lat': lat, 'lng': lng, 'area_id': areaId, 'branch_id': branchId};
+}

@@ -13,6 +13,9 @@ class Brand {
   static const card = Color(0xFFFFFDF8);
   static const red = Color(0xFFB23A2A);
   static const whatsapp = Color(0xFF25D366);
+  /// dark brown of the website hero, and its gold
+  static const night = Color(0xFF2A1C11);
+  static const goldLight = Color(0xFFD9B27C);
 }
 
 ThemeData buildTheme() {

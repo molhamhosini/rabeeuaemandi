@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../strings.dart';
 import '../theme.dart';
+import 'location_gate.dart';
 
 class DishImage extends StatelessWidget {
   final MenuItem item;
@@ -290,6 +291,7 @@ class SectionTitle extends StatelessWidget {
 }
 
 /// Chips to pick the branch; dishes the picked branch does not make are hidden.
+/// Bar on the home and menu pages: where we deliver and which branch serves it. Tap to change.
 class BranchPicker extends StatelessWidget {
   const BranchPicker({super.key});
 
@@ -297,27 +299,32 @@ class BranchPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final l = s.lang;
-    if (s.branches.length < 2) return const SizedBox.shrink();
-    Widget chip(String label, int? id) => Padding(
-          padding: const EdgeInsetsDirectional.only(end: 8),
-          child: ChoiceChip(
-            label: Text(label),
-            selected: s.branch == id,
-            onSelected: (_) => s.setBranch(id),
-            selectedColor: Brand.brown,
-            labelStyle: TextStyle(color: s.branch == id ? Colors.white : Brand.brown, fontWeight: FontWeight.w700),
-            showCheckmark: false,
-            side: const BorderSide(color: Brand.line),
-          ),
-        );
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    final pickup = s.place?.kind == 'pickup';
+    return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(children: [
-        Text('${tr('pick_branch', l)}:  ', style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
-        chip(tr('all', l), null),
-        for (final b in s.branches) chip(b.name.of(l), b.id),
-      ]),
+      child: Material(
+        color: Brand.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Brand.line)),
+        child: InkWell(
+          key: const Key('location-bar'),
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => LocationGate.open(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(children: [
+              Icon(pickup ? Icons.storefront : Icons.location_on, color: Brand.gold2),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(tr(pickup ? 'pickup_from' : 'deliver_to', l), style: const TextStyle(fontSize: 12, color: Brand.muted)),
+                  Text(s.placeLabel(l), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, color: Brand.brown)),
+                ]),
+              ),
+              Text(tr('change', l), style: const TextStyle(color: Brand.gold2, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 }

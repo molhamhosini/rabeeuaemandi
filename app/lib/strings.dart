@@ -131,6 +131,14 @@ const Map<String, Map<String, String>> _s = {
   'area': {'ar': 'المنطقة', 'en': 'Area'},
   'area_or_map': {'ar': 'اختار منطقتك أو حدّد موقعك على الخريطة', 'en': 'Pick your area or set your location on the map'},
   'served_by': {'ar': 'بيوصلك :b', 'en': 'Delivered by :b'},
+  'gate_title': {'ar': 'وين بدك نوصّلك؟', 'en': 'Where should we deliver?'},
+  'gate_sub': {'ar': 'حسب موقعك منعرضلك أطباق الفرع الأقرب إلك', 'en': 'We show you the dishes of the branch that serves you'},
+  'gate_me_sub': {'ar': 'الأسرع: منحدد موقعك تلقائيًا', 'en': 'Quickest: we find you automatically'},
+  'gate_map_sub': {'ar': 'حط الدبوس على باب بيتك', 'en': 'Drop the pin on your door'},
+  'gate_area_sub': {'ar': 'اختار منطقتك من القائمة', 'en': 'Choose your area from the list'},
+  'pickup_from': {'ar': 'استلام من الفرع', 'en': 'Pick up at a branch'},
+  'gate_pickup_sub': {'ar': 'بتجي تاخد طلبك بنفسك', 'en': 'Collect your order yourself'},
+  'deliver_to': {'ar': 'التوصيل إلى', 'en': 'Deliver to'},
 };
 
 String tr(String key, String lang) => _s[key]?[lang] ?? _s[key]?['ar'] ?? key;

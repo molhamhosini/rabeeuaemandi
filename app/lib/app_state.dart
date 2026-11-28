@@ -38,6 +38,10 @@ class AppState extends ChangeNotifier {
   /// The signed-in customer, or null for a guest. The token is kept in the phone's storage.
   Customer? customer;
   bool get signedIn => customer != null;
+  /// Where the customer wants their food: picked on the location screen after the splash.
+  /// It decides the branch, so the menu only shows that branch's dishes.
+  DeliveryPlace? place;
+
   /// The branch the customer picked; dishes another branch does not make are hidden.
   int? branch;
 
@@ -49,6 +53,31 @@ class AppState extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     id == null ? await p.remove('branch') : await p.setInt('branch', id);
     notifyListeners();
+  }
+
+  /// Save where to deliver (or pickup branch) and switch the menu to the branch that serves it.
+  Future<void> setPlace(DeliveryPlace p) async {
+    place = p;
+    final id = switch (p.kind) {
+      'area' => areas.where((a) => a.id == p.areaId).map((a) => a.branchId).firstOrNull,
+      'pin' => nearestBranch((p.lat!, p.lng!)),
+      _ => p.branchId,
+    };
+    (await SharedPreferences.getInstance()).setString('place', jsonEncode(p.toJson()));
+    await setBranch(id ?? branch);
+  }
+
+  /// "Al Khalidiyah · Al Danah Branch" for the bar on top of the home and menu pages.
+  String placeLabel(String l) {
+    final p = place;
+    final b = branches.where((x) => x.id == branch).map((x) => x.name.of(l)).firstOrNull ?? '';
+    if (p == null) return b;
+    final where = switch (p.kind) {
+      'area' => areas.where((a) => a.id == p.areaId).map((a) => a.name.of(l)).firstOrNull ?? '',
+      'pin' => l == 'ar' ? 'موقعي على الخريطة' : 'My map location',
+      _ => l == 'ar' ? 'استلام من الفرع' : 'Pickup',
+    };
+    return b.isEmpty ? where : '$where · $b';
   }
 
   List<Area> get areas => branches.expand((b) => b.areas).toList();
@@ -78,6 +107,12 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     lang = prefs.getString('lang') ?? 'ar';
     branch = prefs.getInt('branch');
+    final savedPlace = prefs.getString('place');
+    if (savedPlace != null) {
+      try {
+        place = DeliveryPlace.fromJson(jsonDecode(savedPlace));
+      } catch (_) {}
+    }
     myOrders.addAll(prefs.getStringList('orders') ?? []);
     api.token = prefs.getString('token');
     final saved = prefs.getString('customer');

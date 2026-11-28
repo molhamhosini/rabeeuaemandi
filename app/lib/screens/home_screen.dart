@@ -27,6 +27,8 @@ class HomeScreen extends StatelessWidget {
             TextButton(onPressed: s.toggleLang, child: Text(tr('language', l), style: const TextStyle(color: Brand.brown, fontWeight: FontWeight.w700))),
           ],
         ),
+        // where we deliver: decides the branch and so the dishes shown
+        const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.only(bottom: 12), child: BranchPicker())),
         SliverToBoxAdapter(child: _Hero(onOrder: () => onOpenMenu(null))),
         SliverToBoxAdapter(
           child: Padding(
@@ -41,7 +43,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(child: SectionTitle(tr('featured', l))),
-        const SliverToBoxAdapter(child: BranchPicker()),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverGrid.builder(
