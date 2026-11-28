@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
                 $extras,
             ],
             in_array($category, ['lamb', 'chicken'], true) && empty($item['options']) => [$rice(false), $extras],
-            $category === 'fish' => [$extras],
+            $category === 'fish' => [$rice(false), $extras],
             default => [],
         };
     }
