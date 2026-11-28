@@ -66,6 +66,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         children: [
           for (final c in cats)
             CustomScrollView(slivers: [
+              const SliverToBoxAdapter(child: BranchPicker()),
               if (!c.note.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 0), child: Text(c.note.of(l), style: const TextStyle(color: Brand.muted))),
@@ -74,8 +75,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16),
                 sliver: SliverGrid.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 240, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: .76),
-                  itemCount: c.items.length,
-                  itemBuilder: (_, i) => DishCard(c.items[i]),
+                  itemCount: s.itemsOf(c).length,
+                  itemBuilder: (_, i) => DishCard(s.itemsOf(c)[i]),
                 ),
               ),
               SliverToBoxAdapter(

@@ -1,6 +1,8 @@
 @php($hasOpts = $item->options->isNotEmpty())
 @php($hasChoices = $item->hasChoices())
-<article class="dish">
+@php($only = $item->branchList())
+@php($bnames = once(fn () => \App\Models\Branch::all()->mapWithKeys(fn ($b) => [$b->id => $b->tr('name')])))
+<article class="dish" data-dish="{{ $item->id }}" @if($only) data-branches="{{ implode(',', $only) }}" @endif>
   <div @class(['ph', 'photo' => str_contains((string) $item->image, 'photos/'), 'menu' => str_contains((string) $item->image, 'images/menu/'), 'emblem' => str_contains((string) $item->image, 'emblem')])>
     @if($item->image)
       <img src="{{ $item->imageUrl() }}" alt="{{ $item->tr('name') }}" loading="lazy">
@@ -12,6 +14,7 @@
   <div class="body">
     <h3>{{ $item->tr('name') }}</h3>
     <div class="alt">{{ app()->getLocale() === 'en' ? $item->name_ar : $item->name_en }}</div>
+    @if($only)<div class="only-at">📍 {{ __('site.only_at', ['branch' => collect($only)->map(fn ($id) => $bnames[$id] ?? '')->filter()->join(' / ')]) }}</div>@endif
     @if($item->tr('description'))<div class="desc">{{ $item->tr('description') }}</div>@endif
     <div class="row">
       <span class="price">@if($hasOpts)<small>{{ __('site.from') }} </small>@endif{{ \App\Services\OrderService::money($item->displayPrice()) }} <small>{{ __('site.aed') }}</small></span>

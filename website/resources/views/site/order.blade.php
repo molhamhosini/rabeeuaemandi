@@ -17,6 +17,8 @@
     @elseif(request('cancelled'))
       <p style="color:var(--red)">{{ __('site.order.cancelled') }}</p>
       <a class="btn btn-wa" href="{{ $whatsapp }}" target="_blank" rel="noopener">{{ __('site.checkout.submit_whatsapp') }}</a>
+    @elseif($order->payment_method === 'cash')
+      <p style="color:var(--muted)">{{ __('site.order.cash_hint') }}</p>
     @elseif($order->payment_method === 'whatsapp')
       <p style="color:var(--muted)">{{ __('site.order.whatsapp_hint') }}</p>
       <a class="btn btn-wa" href="{{ $whatsapp }}" target="_blank" rel="noopener">{{ __('site.checkout.submit_whatsapp') }}</a>

@@ -14,7 +14,11 @@ class MenuController extends Controller
         return [
             'currency' => 'AED',
             'card_payment' => OrderService::cardEnabled(),
-            'whatsapp_payment' => true,
+            'whatsapp_payment' => in_array('whatsapp', OrderService::paymentMethods(), true),
+            // the methods to offer, in order: card, cash (on delivery or pickup), whatsapp
+            'payment_methods' => OrderService::paymentMethods(),
+            // false while the owner has paused new orders from the admin
+            'taking_orders' => ! \App\Models\Setting::ordersPaused(),
             // ordering hours in Abu Dhabi time, and how far ahead banquets can be booked
             'hours' => OrderService::hours(),
             'hero_video' => asset('images/brand/hero.mp4'),

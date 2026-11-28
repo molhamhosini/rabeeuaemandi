@@ -33,8 +33,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final l = s.lang;
-    _branch ??= s.branches.isNotEmpty ? s.branches.first.id : null;
-    _payment ??= s.config.cardPayment ? 'card' : 'whatsapp';
+    _branch ??= s.branches.any((b) => b.id == s.branch) ? s.branch : (s.branches.isNotEmpty ? s.branches.first.id : null);
+    final payments = s.config.payments;
+    if (_payment == null || !payments.contains(_payment)) _payment = payments.isNotEmpty ? payments.first : null;
+    // dishes in the cart that the chosen branch does not make
+    final missing = s.cart.where((c) => !c.item.availableAt(_branch)).map((c) => c.item.name.of(l)).toSet().toList();
+    final blocked = !s.config.takingOrders || missing.isNotEmpty || _payment == null;
     String? req(String? v) => (v == null || v.trim().isEmpty) ? tr('required', l) : null;
 
     return Scaffold(
@@ -42,14 +46,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: Form(
         key: _form,
         child: ListView(padding: const EdgeInsets.all(16), children: [
+          if (!s.config.takingOrders)
+            Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: const Color(0xFFFBE3E0), borderRadius: BorderRadius.circular(14)),
+              child: Text(tr('paused', l), style: const TextStyle(color: Brand.red, fontWeight: FontWeight.w700)),
+            ),
           _Card(title: tr('branch', l), children: [
             for (final b in s.branches)
               _Choice(
                 selected: _branch == b.id,
                 title: b.name.of(l),
                 subtitle: b.address.of(l),
-                onTap: () => setState(() => _branch = b.id),
+                onTap: () {
+                  setState(() => _branch = b.id);
+                  s.setBranch(b.id);
+                },
               ),
+            if (missing.isNotEmpty)
+              Text('${missing.join('، ')}: ${tr('not_here', l)}', style: const TextStyle(color: Brand.red, fontWeight: FontWeight.w700)),
           ]),
           _Card(title: tr('fulfillment', l), children: [
             Row(children: [
@@ -76,14 +92,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ]),
           _whenCard(s, l),
           _Card(title: tr('payment', l), children: [
-            _Choice(
-              selected: _payment == 'card',
-              enabled: s.config.cardPayment,
-              title: tr('pay_card', l),
-              subtitle: s.config.cardPayment ? tr('pay_card_sub', l) : tr('card_off', l),
-              onTap: () => setState(() => _payment = 'card'),
-            ),
-            _Choice(selected: _payment == 'whatsapp', title: tr('pay_wa', l), subtitle: tr('pay_wa_sub', l), onTap: () => setState(() => _payment = 'whatsapp')),
+            for (final m in payments)
+              _Choice(
+                selected: _payment == m,
+                title: tr(m == 'whatsapp' ? 'pay_wa' : 'pay_$m', l),
+                subtitle: tr(m == 'whatsapp' ? 'pay_wa_sub' : 'pay_${m}_sub', l),
+                onTap: () => setState(() => _payment = m),
+              ),
           ]),
           if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(_error!, style: const TextStyle(color: Brand.red))),
         ]),
@@ -93,10 +108,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: FilledButton(
             style: _payment == 'whatsapp' ? FilledButton.styleFrom(backgroundColor: Brand.whatsapp) : null,
-            onPressed: _busy || s.cart.isEmpty ? null : () => _submit(s),
+            onPressed: _busy || s.cart.isEmpty || blocked ? null : () => _submit(s),
             child: _busy
                 ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                : Text('${_payment == 'card' ? tr('submit_card', l) : tr('submit_wa', l)} · ${money(s.subtotal)} ${tr('aed', l)}'),
+                : Text('${tr(switch (_payment) { 'card' => 'submit_card', 'cash' => 'submit_cash', _ => 'submit_wa' }, l)} · ${money(s.subtotal)} ${tr('aed', l)}'),
           ),
         ),
       ),
@@ -233,8 +248,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       await s.rememberOrder(order.code);
       s.clearCart();
-      // WhatsApp opens the chat with the order typed out; card opens Stripe's secure payment page.
-      await launchUrl(Uri.parse(order.redirect), mode: LaunchMode.externalApplication);
+      // WhatsApp opens the chat with the order typed out; card opens Stripe's secure payment page;
+      // a cash order is already with the restaurant.
+      if (order.redirect case final url?) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => OrderScreen(code: order.code)));
     } catch (e) {

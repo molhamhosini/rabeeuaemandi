@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // hours the owner set on the admin settings page win over config/restaurant.php
+        \App\Models\Setting::forget();
+        \App\Models\Setting::applyToConfig();
     }
 }

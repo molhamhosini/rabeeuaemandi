@@ -38,6 +38,7 @@ class SiteController extends Controller
         return view('site.checkout', [
             'branches' => Branch::active()->get(),
             'cardEnabled' => OrderService::cardEnabled(),
+            'methods' => OrderService::paymentMethods(),
         ]);
     }
 
@@ -46,9 +47,7 @@ class SiteController extends Controller
         $data = $request->validate(OrderService::rules());
         $order = $orders->create($data, 'web');
 
-        $redirect = $order->payment_method === 'card'
-            ? $orders->stripeCheckoutUrl($order)
-            : $orders->whatsappUrl($order);
+        $redirect = $orders->redirectFor($order);
 
         return response()->json(['order' => $order->code, 'number' => $order->number, 'redirect' => $redirect, 'status_url' => route('order.show', $order)]);
     }

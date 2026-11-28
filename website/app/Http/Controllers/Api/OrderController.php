@@ -16,7 +16,7 @@ class OrderController extends Controller
 
         return response()->json([
             'order' => $order->toApi(),
-            'redirect' => $order->payment_method === 'card' ? $orders->stripeCheckoutUrl($order) : $orders->whatsappUrl($order),
+            'redirect' => $order->payment_method === 'cash' ? null : $orders->redirectFor($order),
         ], 201);
     }
 

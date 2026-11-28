@@ -34,14 +34,27 @@ class AppState extends ChangeNotifier {
   List<Branch> branches = [];
   final List<CartLine> cart = [];
   final List<String> myOrders = [];
+  /// The branch the customer picked; dishes another branch does not make are hidden.
+  int? branch;
 
-  List<MenuItem> get featured => categories.expand((c) => c.items).where((i) => i.featured).toList();
+  /// The dishes of a section that the picked branch makes.
+  List<MenuItem> itemsOf(Category c) => c.items.where((i) => i.availableAt(branch)).toList();
+
+  Future<void> setBranch(int? id) async {
+    branch = id;
+    final p = await SharedPreferences.getInstance();
+    id == null ? await p.remove('branch') : await p.setInt('branch', id);
+    notifyListeners();
+  }
+
+  List<MenuItem> get featured => categories.expand((c) => c.items).where((i) => i.featured && i.availableAt(branch)).toList();
   int get count => cart.fold(0, (a, l) => a + l.qty);
   double get subtotal => cart.fold(0.0, (a, l) => a + l.total);
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     lang = prefs.getString('lang') ?? 'ar';
+    branch = prefs.getInt('branch');
     myOrders.addAll(prefs.getStringList('orders') ?? []);
     await load();
   }

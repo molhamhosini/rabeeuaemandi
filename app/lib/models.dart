@@ -63,6 +63,8 @@ class MenuItem {
   final List<AddonGroup> addonGroups;
   /// Hours of notice the dish needs (whole lambs: 3); 0 = can be made right away.
   final int leadHours;
+  /// Branches that make this dish; empty = every branch.
+  final List<int> branchIds;
 
   MenuItem({
     required this.id,
@@ -75,7 +77,10 @@ class MenuItem {
     required this.options,
     this.addonGroups = const [],
     this.leadHours = 0,
+    this.branchIds = const [],
   });
+
+  bool availableAt(int? branch) => branch == null || branchIds.isEmpty || branchIds.contains(branch);
 
   bool get hasOptions => options.isNotEmpty;
   bool get hasChoices => options.isNotEmpty || addonGroups.isNotEmpty;
@@ -98,6 +103,7 @@ class MenuItem {
         options: ((j['options'] as List?) ?? []).map((o) => ItemOption.fromJson(o)).toList(),
         addonGroups: ((j['addon_groups'] as List?) ?? []).map((g) => AddonGroup.fromJson(g)).toList(),
         leadHours: (j['lead_hours'] as num?)?.toInt() ?? 0,
+        branchIds: ((j['branch_ids'] as List?) ?? []).map((v) => (v as num).toInt()).toList(),
       );
 }
 
@@ -146,13 +152,22 @@ class AppConfig {
   /// days banquets can be booked ahead, and minimum minutes for an ordinary meal.
   final String open, last;
   final int step, days, meal;
-  AppConfig(this.cardPayment, this.instagram, {this.open = '12:00', this.last = '23:30', this.step = 30, this.days = 30, this.meal = 30});
+  /// Payment methods the owner has switched on, in order: card, cash, whatsapp.
+  final List<String> payments;
+  /// False while the owner has paused new orders from the admin.
+  final bool takingOrders;
+  AppConfig(this.cardPayment, this.instagram,
+      {this.open = '12:00', this.last = '23:30', this.step = 30, this.days = 30, this.meal = 30, this.payments = const ['whatsapp'], this.takingOrders = true});
 
   factory AppConfig.fromJson(Map<String, dynamic> j) {
     final h = (j['hours'] as Map?) ?? {};
     return AppConfig(j['card_payment'] == true, '${j['instagram'] ?? ''}',
         open: '${h['open'] ?? '12:00'}', last: '${h['last'] ?? '23:30'}',
-        step: (h['step'] as num?)?.toInt() ?? 30, days: (h['days'] as num?)?.toInt() ?? 30, meal: (h['meal'] as num?)?.toInt() ?? 30);
+        step: (h['step'] as num?)?.toInt() ?? 30, days: (h['days'] as num?)?.toInt() ?? 30, meal: (h['meal'] as num?)?.toInt() ?? 30,
+        payments: j['payment_methods'] is List
+            ? (j['payment_methods'] as List).map((e) => '$e').toList()
+            : [if (j['card_payment'] == true) 'card', 'whatsapp'],
+        takingOrders: j['taking_orders'] != false);
   }
 }
 
@@ -161,6 +176,7 @@ class PlacedOrder {
   final String status;
   final String paymentStatus;
   final double total;
-  final String redirect;
+  /// Stripe or WhatsApp link to open; null for cash orders.
+  final String? redirect;
   PlacedOrder(this.code, this.status, this.paymentStatus, this.total, this.redirect);
 }

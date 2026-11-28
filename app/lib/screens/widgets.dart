@@ -72,6 +72,8 @@ class DishCard extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(item.name.of(l), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 Text(item.name.of(l == 'ar' ? 'en' : 'ar'), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Brand.muted)),
+                if (onlyAtText(s, item) case final only?)
+                  Text('📍 $only', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF3C2E9B), fontWeight: FontWeight.w700)),
                 const Spacer(),
                 Row(children: [
                   Expanded(child: Price(item.displayPrice, from: item.hasOptions, size: 15)),
@@ -285,4 +287,44 @@ class SectionTitle extends StatelessWidget {
           if (trailing != null) trailing!,
         ]),
       );
+}
+
+/// Chips to pick the branch; dishes the picked branch does not make are hidden.
+class BranchPicker extends StatelessWidget {
+  const BranchPicker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context);
+    final l = s.lang;
+    if (s.branches.length < 2) return const SizedBox.shrink();
+    Widget chip(String label, int? id) => Padding(
+          padding: const EdgeInsetsDirectional.only(end: 8),
+          child: ChoiceChip(
+            label: Text(label),
+            selected: s.branch == id,
+            onSelected: (_) => s.setBranch(id),
+            selectedColor: Brand.brown,
+            labelStyle: TextStyle(color: s.branch == id ? Colors.white : Brand.brown, fontWeight: FontWeight.w700),
+            showCheckmark: false,
+            side: const BorderSide(color: Brand.line),
+          ),
+        );
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(children: [
+        Text('${tr('pick_branch', l)}:  ', style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.brown)),
+        chip(tr('all', l), null),
+        for (final b in s.branches) chip(b.name.of(l), b.id),
+      ]),
+    );
+  }
+}
+
+/// "Only at Al Danah" under a dish that one branch makes.
+String? onlyAtText(AppState s, MenuItem item) {
+  if (item.branchIds.isEmpty) return null;
+  final names = s.branches.where((b) => item.branchIds.contains(b.id)).map((b) => b.name.of(s.lang)).join(' / ');
+  return names.isEmpty ? null : tr('only_at', s.lang).replaceAll(':b', names);
 }

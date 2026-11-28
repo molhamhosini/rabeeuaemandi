@@ -42,7 +42,7 @@ class Api {
       throw ApiException(errors);
     }
     final o = data['order'];
-    return PlacedOrder(o['code'], o['status'], o['payment_status'], (o['total'] as num).toDouble(), data['redirect']);
+    return PlacedOrder(o['code'], o['status'], o['payment_status'], (o['total'] as num).toDouble(), data['redirect'] as String?);
   }
 
   Future<Map<String, dynamic>> order(String code, String lang) async =>

@@ -17,7 +17,7 @@
     if (ex) ex.qty++;
     else cart.push({key, item_id: item.id, option_id: option ? option.id : null, addon_ids: ids, name: item.name,
       option: option ? option.name : null, details: describe(addons),
-      price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, lead: item.lead || 0, qty: 1});
+      price: (option ? option.price : item.price) + addons.reduce((t, a) => t + a.price, 0), image: item.image, lead: item.lead || 0, branches: item.branches || [], qty: 1});
     save(); toast(S.t.added);
   }
 
@@ -33,6 +33,19 @@
     t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1400);
   }
 
+  // the branch the customer picked; dishes only one branch makes are hidden for the other
+  let branch = null;
+  try { branch = parseInt(localStorage.getItem('branch')) || null; } catch (e) {}
+  const okAt = (list, b) => !b || !list || !list.length || list.map(Number).includes(Number(b));
+  function setBranch(b) {
+    branch = b ? Number(b) : null;
+    try { localStorage.setItem('branch', branch || ''); } catch (e) {}
+    $$('[data-branch-btn]').forEach(x => x.classList.toggle('on', Number(x.dataset.branchBtn) === branch));
+    $$('[data-dish][data-branches]').forEach(d => d.hidden = !okAt(d.dataset.branches.split(','), branch));
+  }
+  document.addEventListener('click', e => { const x = e.target.closest('[data-branch-btn]'); if (x) setBranch(Number(x.dataset.branchBtn) === branch ? null : x.dataset.branchBtn); });
+  setBranch(branch);
+
   function render() {
     $$('[data-cart-count]').forEach(e => e.textContent = count());
     $$('[data-cart-total]').forEach(e => e.textContent = money(total()));
@@ -43,15 +56,20 @@
         box.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg><b>${esc(S.t.empty)}</b><div>${esc(S.t.emptySub)}</div></div>`;
         return;
       }
+      const cb = $('input[name=branch_id]:checked');
+      const at = cb ? Number(cb.value) : null;
       box.innerHTML = cart.map((l, i) => `
-        <div class="line">
+        <div class="line${okAt(l.branches, at) ? '' : ' na'}">
           ${l.image ? `<img src="${esc(l.image)}" alt="">` : ''}
-          <div class="nm"><b>${esc(l.name)}</b>${l.option ? `<small>${esc(l.option)}</small><br>` : ''}${l.details ? `<small class="det">${esc(l.details)}</small>` : ''}<small>${money(l.price)} ${esc(S.aed)}</small></div>
+          <div class="nm"><b>${esc(l.name)}</b>${l.option ? `<small>${esc(l.option)}</small><br>` : ''}${l.details ? `<small class="det">${esc(l.details)}</small>` : ''}<small>${money(l.price)} ${esc(S.aed)}</small>${okAt(l.branches, at) ? '' : `<small class="na-l">${esc(S.t.notHere)}</small>`}</div>
           <div class="qty"><button type="button" data-dec="${i}" aria-label="-">−</button><span>${l.qty}</span><button type="button" data-inc="${i}" aria-label="+">+</button></div>
         </div>`).join('');
     });
     const sub = $('[data-submit]');
-    if (sub) { const pm = $('input[name=payment_method]:checked'); sub.textContent = pm && pm.value === 'card' ? sub.dataset.card : sub.dataset.wa; sub.disabled = !cart.length; }
+    if (sub) { const pm = $('input[name=payment_method]:checked'); sub.textContent = pm ? sub.dataset[pm.value === 'whatsapp' ? 'wa' : pm.value] : sub.dataset.wa; const cbx = $('input[name=branch_id]:checked'), bad = cbx ? cart.filter(l => !okAt(l.branches, cbx.value)) : [];
+      sub.disabled = !cart.length || !pm || sub.hasAttribute('data-paused') || bad.length > 0;
+      const be = $('[data-branch-err]');
+      if (be) { const bn = cbx ? (S.branches.find(b => b.id === Number(cbx.value)) || {}).name : ''; be.hidden = !bad.length; be.textContent = bad.map(l => S.t.notAtBranch.replace(':item', l.name).replace(':branch', bn)).join(' · '); } }
   }
 
   // drawer + option sheet
@@ -153,6 +171,10 @@
   const form = $('[data-checkout]');
   if (form) {
     const addr = $('[data-address]', form);
+    // start on the branch picked on the menu, and remember a new choice
+    const pre = branch && $(`input[name=branch_id][value="${branch}"]`, form);
+    if (pre) pre.checked = true;
+    form.addEventListener('change', e => { if (e.target.name === 'branch_id') setBranch(e.target.value); });
     // when: as soon as possible, or a set time from the choices. Ordinary dishes are for today;
     // banquets and the cooking service need hours of notice and can be booked on a later day.
     const H = S.hours, whenAt = $('[data-when-at]', form), note = $('[data-lead-note]', form);
@@ -227,6 +249,9 @@
           cart = []; save();
           // go to the order page; it opens WhatsApp with the order text
           location.href = data.status_url + '?wa=1';
+        } else if (body.payment_method === 'cash') {
+          cart = []; save();
+          location.href = data.status_url;
         } else {
           location.href = data.redirect;
         }

@@ -15,7 +15,7 @@
 <meta property="og:image" content="{{ asset('images/photos/hero-chicken.webp') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=6">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=7">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="{{ $rtl ? 'ar' : 'en' }}">
@@ -110,10 +110,11 @@ window.SITE = {
   locale: @json(app()->getLocale()),
   aed: @json(__('site.aed')),
   hours: @json(\App\Services\OrderService::hours()),
-  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), optional: @json(__('site.optional')), required: @json(__('site.required')), chooseOne: @json(__('site.choose_one')), chooseMany: @json(__('site.choose_many')), notes: @json(__('site.item_notes')), leadNote: @json(__('site.schedule.lead_note')), today: @json(__('site.schedule.today')), tomorrow: @json(__('site.schedule.tomorrow')), closedToday: @json(__('site.schedule.closed_today')), sending: @json(__('site.checkout.sending')) },
+  branches: @json(\App\Models\Branch::active()->get()->map(fn ($b) => ['id' => $b->id, 'name' => $b->tr('name')])),
+  t: { empty: @json(__('site.cart.empty')), emptySub: @json(__('site.cart.empty_sub')), added: @json(__('site.added')), add: @json(__('site.add')), choose: @json(__('site.choose')), optional: @json(__('site.optional')), required: @json(__('site.required')), chooseOne: @json(__('site.choose_one')), chooseMany: @json(__('site.choose_many')), notes: @json(__('site.item_notes')), leadNote: @json(__('site.schedule.lead_note')), today: @json(__('site.schedule.today')), tomorrow: @json(__('site.schedule.tomorrow')), closedToday: @json(__('site.schedule.closed_today')), sending: @json(__('site.checkout.sending')), notHere: @json(__('site.unavailable_here')), notAtBranch: @json(__('site.not_at_branch')) },
 };
 </script>
-<script src="{{ asset('js/cart.js') }}?v=6"></script>
+<script src="{{ asset('js/cart.js') }}?v=7"></script>
 @stack('scripts')
 </body>
 </html>

@@ -18,7 +18,7 @@ class AuthController extends Controller
         $cred = $request->validate(['email' => 'required|email', 'password' => 'required']);
         if (Auth::attempt($cred, true) && Auth::user()->is_admin) {
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.orders'));
+            return redirect()->intended(route('admin.board'));
         }
         Auth::logout();
         return back()->withErrors(['email' => __('site.admin.bad_login')])->onlyInput('email');
