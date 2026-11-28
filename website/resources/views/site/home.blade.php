@@ -94,7 +94,7 @@
       <p>{{ __('site.van_text') }}</p>
       <a class="btn btn-primary" href="{{ route('menu') }}">{{ __('site.order_now') }}</a>
     </div>
-    <figure class="van-ph"><img src="{{ asset('images/brand/delivery-van.webp') }}" alt="{{ __('site.van_alt') }}" loading="lazy" width="1600" height="658"></figure>
+    <figure class="van-ph"><img src="{{ asset('images/brand/delivery-van.webp') }}" alt="{{ __('site.van_alt') }}" loading="lazy" width="1513" height="590"></figure>
   </div>
 </section>
 

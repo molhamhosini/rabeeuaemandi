@@ -10,6 +10,38 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+    /** Real photos the owner sent (2026-11-28), on the same background; they win over the PSD cut-outs. */
+    public const PHOTOS = [
+        'Yogurt Normal' => 'yogurt', 'Yogurt Cucumber' => 'yogurt', 'Cold Drinks' => 'cold-drinks',
+        'Suprem Fish' => 'fish-suprem-plate', 'Hamour Fish' => 'fish-hamour-plate', 'Salmon Fish' => 'fish-salmon-plate',
+        'Madfoon Lamb' => 'lamb-madfoon-plate', 'Madhbi Lamb' => 'lamb-madhbi-plate', 'Zirbyan Lamb' => 'lamb-zirbyan-plate',
+        'Burma Lamb' => 'lamb-burma-plate', 'Head with rice' => 'lamb-head-plate',
+        'Mandi Chicken' => 'chicken-mandi-plate', 'Madhbi Chicken' => 'chicken-madhbi-plate', 'Madfoon Chicken' => 'chicken-madfoon-plate',
+    ];
+
+    /** Lamb, chicken and fish meals also sold without rice, 8 AED less (the price of a rice plate). */
+    public const NO_RICE_SECTIONS = ['lamb', 'chicken', 'fish'];
+    public const NO_RICE_SKIP = ['Waslah Lamb', 'Head with rice', 'Harees Lamb', 'Whole Stuffed Chicken'];
+    public const NO_RICE_DISCOUNT = 8;
+
+    /** The dish and, where it is sold both ways, its "without rice" twin right after it. */
+    public static function withNoRice(string $section, array $items): array
+    {
+        $out = [];
+        foreach ($items as $i) {
+            $out[] = $i;
+            if (in_array($section, self::NO_RICE_SECTIONS, true) && empty($i['options']) && $i['price'] !== null
+                && ! in_array($i['name_en'], self::NO_RICE_SKIP, true)) {
+                $out[] = ['name_ar' => $i['name_ar'].' بدون رز', 'name_en' => $i['name_en'].' (no rice)',
+                    'price' => max(0, $i['price'] - self::NO_RICE_DISCOUNT), 'image' => $i['image'] ?? null,
+                    'featured' => false, 'options' => [], 'no_rice' => true,
+                    'description_ar' => $i['description_ar'] ?? null, 'description_en' => $i['description_en'] ?? null,
+                    'photo_of' => $i['name_en']];
+            }
+        }
+        return $out;
+    }
+
     /** Dish images come from the printed-menu PSDs, all on one shared background (images/menu). */
     private function image(?string $slug): string
     {
@@ -33,6 +65,8 @@ class DatabaseSeeder extends Seeder
         $rice = fn (bool $required) => ['نوع الرز', 'Rice type',
             true, $required, array_map(fn ($r) => [$r[0], $r[1], 0], self::RICE)];
         $extras = ['إضافات', 'Extras', true, false, self::EXTRAS];
+
+        if (! empty($item['no_rice'])) return [$extras];
 
         return match (true) {
             $category === 'banquets' && ! str_contains($item['name_ar'], 'بدون أرز') => [
@@ -85,13 +119,13 @@ class DatabaseSeeder extends Seeder
                 // whole lambs (banquets, cooking service) are booked 3 hours ahead, on any day
                 'lead_hours' => in_array($c['slug'], ['banquets', 'cooking-service'], true) ? 3 : 0,
             ]);
-            foreach ($c['items'] as $ii => $i) {
+            foreach (self::withNoRice($c['slug'], $c['items']) as $ii => $i) {
                 $item = $category->items()->updateOrCreate(['name_en' => $i['name_en']], [
                     'name_ar' => $i['name_ar'],
                     'description_ar' => $i['description_ar'] ?? null,
                     'description_en' => $i['description_en'] ?? null,
                     'price' => $i['price'],
-                    'image' => $this->image($i['image']),
+                    'image' => $this->image(self::PHOTOS[$i['photo_of'] ?? $i['name_en']] ?? $i['image']),
                     'is_featured' => $i['featured'],
                     'sort' => $ii,
                 ]);
