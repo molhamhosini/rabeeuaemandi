@@ -41,6 +41,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(child: SectionTitle(tr('featured', l))),
+        const SliverToBoxAdapter(child: BranchPicker()),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverGrid.builder(

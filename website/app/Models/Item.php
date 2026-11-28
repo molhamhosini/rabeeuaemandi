@@ -11,7 +11,7 @@ class Item extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['is_active' => 'boolean', 'is_featured' => 'boolean', 'price' => 'decimal:2'];
+    protected $casts = ['is_active' => 'boolean', 'is_featured' => 'boolean', 'price' => 'decimal:2', 'branch_ids' => 'array'];
 
     public function category() { return $this->belongsTo(Category::class); }
 
@@ -23,6 +23,18 @@ class Item extends Model
     public function hasChoices(): bool
     {
         return $this->options->isNotEmpty() || $this->addonGroups->isNotEmpty();
+    }
+
+    /** Empty branch list means every branch makes this dish. */
+    public function availableAt(int|string|null $branchId): bool
+    {
+        return empty($this->branch_ids) || in_array((int) $branchId, array_map('intval', $this->branch_ids), true);
+    }
+
+    /** The branch ids that have it, or [] for all branches. */
+    public function branchList(): array
+    {
+        return array_values(array_map('intval', $this->branch_ids ?? []));
     }
 
     public function imageUrl(): ?string
@@ -54,6 +66,8 @@ class Item extends Model
             ])->values(),
             'addon_groups' => $this->addonGroups->map->toApi()->values(),
             'lead_hours' => (int) $this->category?->lead_hours,
+            // only these branches make it; empty = every branch
+            'branch_ids' => $this->branchList(),
         ];
     }
 }

@@ -11,17 +11,20 @@ class MenuController extends Controller
 {
     public function index()
     {
-        return view('admin.menu', ['categories' => Category::orderBy('sort')->with('items.options', 'items.addonGroups')->get()]);
+        return view('admin.menu', [
+            'categories' => Category::orderBy('sort')->with('items.options', 'items.addonGroups')->get(),
+            'branches' => \App\Models\Branch::orderBy('sort')->get(),
+        ]);
     }
 
     public function create()
     {
-        return view('admin.item', ['item' => new Item(['is_active' => true]), 'categories' => Category::orderBy('sort')->get()]);
+        return view('admin.item', ['item' => new Item(['is_active' => true]), 'categories' => Category::orderBy('sort')->get(), 'branches' => \App\Models\Branch::orderBy('sort')->get()]);
     }
 
     public function edit(Item $item)
     {
-        return view('admin.item', ['item' => $item->load('options', 'addonGroups.addons'), 'categories' => Category::orderBy('sort')->get()]);
+        return view('admin.item', ['item' => $item->load('options', 'addonGroups.addons'), 'categories' => Category::orderBy('sort')->get(), 'branches' => \App\Models\Branch::orderBy('sort')->get()]);
     }
 
     public function store(Request $request)
@@ -64,7 +67,13 @@ class MenuController extends Controller
             'groups.*.name_ar' => 'nullable|string|max:80',
             'groups.*.name_en' => 'nullable|string|max:80',
             'groups.*.lines' => 'nullable|string|max:3000',
+            'branches' => 'array',
+            'branches.*' => 'integer|exists:branches,id',
         ]);
+        // ticking every branch (or none) means the dish is everywhere
+        $ids = array_values(array_unique(array_map('intval', $data['branches'] ?? [])));
+        $data['branch_ids'] = $ids && count($ids) < \App\Models\Branch::count() ? $ids : null;
+        unset($data['branches']);
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
         unset($data['options'], $data['groups']);

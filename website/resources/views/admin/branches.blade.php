@@ -1,6 +1,7 @@
 @extends('admin.layout')
+@section('title', __('admin.branches'))
+@section('heading', __('admin.branches'))
 @section('content')
-<h1>{{ __('site.admin.branches') }}</h1>
 @foreach($branches as $b)
 <form class="card" method="post" action="{{ route('admin.branches.update', $b) }}" style="max-width:860px">
   @csrf @method('put')

@@ -19,8 +19,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('logout', [Admin\AuthController::class, 'logout'])->name('logout');
 
     Route::middleware(['auth', 'admin'])->group(function () {
-        Route::get('/', [Admin\OrderController::class, 'index'])->name('orders');
+        Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('poll', [Admin\DashboardController::class, 'poll'])->name('poll');
+        Route::get('board', [Admin\OrderController::class, 'board'])->name('board');
+        Route::post('pause', [Admin\OrderController::class, 'pause'])->name('pause');
+        Route::get('orders', [Admin\OrderController::class, 'index'])->name('orders');
         Route::get('orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{order}/ticket', [Admin\OrderController::class, 'ticket'])->name('orders.ticket');
         Route::patch('orders/{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
         Route::get('menu', [Admin\MenuController::class, 'index'])->name('menu');
         Route::get('items/create', [Admin\MenuController::class, 'create'])->name('items.create');
@@ -28,6 +33,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('items/{item}/edit', [Admin\MenuController::class, 'edit'])->name('items.edit');
         Route::put('items/{item}', [Admin\MenuController::class, 'update'])->name('items.update');
         Route::patch('items/{item}/toggle', [Admin\MenuController::class, 'toggle'])->name('items.toggle');
+        Route::get('settings', [Admin\SettingsController::class, 'index'])->name('settings');
+        Route::put('settings', [Admin\SettingsController::class, 'update'])->name('settings.update');
         Route::get('branches', [Admin\BranchController::class, 'index'])->name('branches');
         Route::put('branches/{branch}', [Admin\BranchController::class, 'update'])->name('branches.update');
     });

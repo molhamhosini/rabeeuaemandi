@@ -25,7 +25,7 @@ class OrderService
             'notes' => 'nullable|string|max:500',
             // local Abu Dhabi time from the form, e.g. 2026-11-28T19:30; empty = as soon as possible
             'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
-            'payment_method' => 'required|in:card,whatsapp',
+            'payment_method' => 'required|in:cash,card,whatsapp',
             'items' => 'required|array|min:1|max:50',
             'items.*.item_id' => 'required|integer|exists:items,id',
             'items.*.option_id' => 'nullable|integer|exists:item_options,id',
@@ -89,16 +89,46 @@ class OrderService
         return $when->utc();
     }
 
+    /** Stripe is set up (the key is on the server) and the owner has card payments switched on. */
     public static function cardEnabled(): bool
     {
-        return filled(config('services.stripe.secret'));
+        return filled(config('services.stripe.secret')) && (bool) \App\Models\Setting::get('pay.card', true);
+    }
+
+    /**
+     * Payment methods customers can choose now, in display order.
+     * cash: pay on delivery or pickup, the order goes straight to the admin board.
+     * whatsapp: the order also opens a WhatsApp chat with the branch.
+     * card: Stripe's payment page.
+     */
+    public static function paymentMethods(): array
+    {
+        $on = fn ($m, $default) => (bool) \App\Models\Setting::get('pay.'.$m, $default);
+        return array_values(array_filter([
+            self::cardEnabled() ? 'card' : null,
+            $on('cash', false) ? 'cash' : null,
+            $on('whatsapp', true) ? 'whatsapp' : null,
+        ]));
+    }
+
+    /** Where the customer goes after placing the order. */
+    public function redirectFor(Order $order): string
+    {
+        return match ($order->payment_method) {
+            'card' => $this->stripeCheckoutUrl($order),
+            'whatsapp' => $this->whatsappUrl($order),
+            default => route('order.show', $order),
+        };
     }
 
     /** Create the order with prices taken from the database, never from the client. */
     public function create(array $data, string $source = 'web'): Order
     {
-        if ($data['payment_method'] === 'card' && ! self::cardEnabled()) {
-            throw ValidationException::withMessages(['payment_method' => __('site.card_unavailable')]);
+        if (\App\Models\Setting::ordersPaused()) {
+            throw ValidationException::withMessages(['items' => __('site.orders_paused')]);
+        }
+        if (! in_array($data['payment_method'], self::paymentMethods(), true)) {
+            throw ValidationException::withMessages(['payment_method' => __($data['payment_method'] === 'card' ? 'site.card_unavailable' : 'site.payment_unavailable')]);
         }
 
         $branch = Branch::where('is_active', true)->findOrFail($data['branch_id']);
@@ -109,6 +139,9 @@ class OrderService
             $lead = 0;
             foreach ($data['items'] as $row) {
                 $item = Item::with('options', 'addonGroups.addons', 'category')->where('is_active', true)->findOrFail($row['item_id']);
+                if (! $item->availableAt($branch->id)) {
+                    throw ValidationException::withMessages(['items' => __('site.not_at_branch', ['item' => app()->getLocale() === 'en' ? $item->name_en : $item->name_ar, 'branch' => $branch->tr('name')])]);
+                }
                 $lead = max($lead, (int) $item->category?->lead_hours);
                 $option = null;
                 if ($item->options->isNotEmpty()) {

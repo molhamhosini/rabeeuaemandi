@@ -8,6 +8,7 @@
   @foreach($categories as $c)<a href="#{{ $c->slug }}" data-tab="{{ $c->slug }}">{{ $c->tr('name') }}</a>@endforeach
 </div></nav>
 <div class="wrap" style="padding-bottom:40px">
+  @include('site._branch_pick')
   @foreach($categories as $c)
   <section class="menu-sec" id="{{ $c->slug }}" data-sec>
     <h2>{{ $c->tr('name') }}</h2>

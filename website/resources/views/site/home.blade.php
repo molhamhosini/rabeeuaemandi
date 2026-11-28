@@ -37,6 +37,7 @@
       <h2>{{ __('site.featured') }}</h2>
       <i class="orn"></i>
     </header>
+    @include('site._branch_pick')
     <div class="grid grid-3">
       @foreach($featured as $item) @include('site._dish', ['item' => $item]) @endforeach
     </div>

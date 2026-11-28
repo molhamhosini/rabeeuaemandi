@@ -5,6 +5,7 @@
   <form class="co" data-checkout data-action="{{ route('checkout.store') }}" novalidate>
     <div>
       <h1 style="font-size:2rem;margin-bottom:18px">{{ __('site.checkout.title') }}</h1>
+      @if($paused = \App\Models\Setting::ordersPaused())<div class="card paused-note">{{ __('site.orders_paused_banner') }}</div>@endif
       <div class="card">
         <h3>{{ __('site.checkout.branch') }}</h3>
         <div class="seg">
@@ -41,9 +42,11 @@
       <div class="card">
         <h3>{{ __('site.checkout.payment') }}</h3>
         <div class="seg">
-          <label @class(['disabled' => ! $cardEnabled])><input type="radio" name="payment_method" value="card" @checked($cardEnabled) @disabled(! $cardEnabled)><span><b>{{ __('site.checkout.pay_card') }}</b><small>{{ $cardEnabled ? __('site.checkout.pay_card_sub') : __('site.card_unavailable') }}</small></span></label>
-          <label><input type="radio" name="payment_method" value="whatsapp" @checked(! $cardEnabled)><span><b>{{ __('site.checkout.pay_whatsapp') }}</b><small>{{ __('site.checkout.pay_whatsapp_sub') }}</small></span></label>
+          @foreach($methods as $m)
+          <label><input type="radio" name="payment_method" value="{{ $m }}" @checked($loop->first)><span><b>{{ __('site.checkout.pay_'.$m) }}</b><small>{{ __('site.checkout.pay_'.$m.'_sub') }}</small></span></label>
+          @endforeach
         </div>
+        @if(! $methods)<p class="err">{{ __('site.payment_unavailable') }}</p>@endif
       </div>
     </div>
     <aside class="summary">
@@ -53,8 +56,9 @@
         <div class="sum" style="margin-top:10px"><span>{{ __('site.cart.subtotal') }}</span><span><span data-cart-total>0</span> {{ __('site.aed') }}</span></div>
         <div class="sum"><span>{{ __('site.cart.delivery') }}</span><span>{{ __('site.cart.free') }}</span></div>
         <div class="sum total"><span>{{ __('site.cart.total') }}</span><span><span data-cart-total>0</span> {{ __('site.aed') }}</span></div>
-        <button class="btn btn-primary btn-block" style="margin-top:14px" type="submit" data-submit
-          data-card="{{ __('site.checkout.submit_card') }}" data-wa="{{ __('site.checkout.submit_whatsapp') }}"></button>
+        <button class="btn btn-primary btn-block" style="margin-top:14px" type="submit" data-submit @if($paused) data-paused @endif
+          data-card="{{ __('site.checkout.submit_card') }}" data-wa="{{ __('site.checkout.submit_whatsapp') }}" data-cash="{{ __('site.checkout.submit_cash') }}"></button>
+        <p class="err" data-branch-err hidden></p>
         <p class="err" data-err hidden></p>
       </div>
     </aside>

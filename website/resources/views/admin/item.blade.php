@@ -1,6 +1,8 @@
 @extends('admin.layout')
+@section('title', $item->exists ? $item->name_ar : __('site.admin.add_item'))
+@section('heading', $item->exists ? __('site.admin.edit').': '.$item->tr('name') : __('site.admin.add_item'))
 @section('content')
-<h1>{{ $item->exists ? __('site.admin.edit') : __('site.admin.add_item') }}</h1>
+<p style="margin:0 0 12px"><a class="link" href="{{ route('admin.menu') }}">← {{ __('admin.menu') }}</a></p>
 <form class="card" method="post" enctype="multipart/form-data" action="{{ $item->exists ? route('admin.items.update', $item) : route('admin.items.store') }}" style="max-width:760px">
   @csrf @if($item->exists) @method('put') @endif
   <div class="field"><label>{{ __('site.admin.category') }}</label><select name="category_id">@foreach($categories as $c)<option value="{{ $c->id }}" @selected(old('category_id', $item->category_id) == $c->id)>{{ $c->tr('name') }}</option>@endforeach</select></div>
@@ -9,6 +11,15 @@
     <div class="field"><label>{{ __('site.admin.name_en') }}</label><input name="name_en" value="{{ old('name_en', $item->name_en) }}" dir="ltr" required></div>
     <div class="field"><label>{{ __('site.admin.desc_ar') }}</label><input name="description_ar" value="{{ old('description_ar', $item->description_ar) }}"></div>
     <div class="field"><label>{{ __('site.admin.desc_en') }}</label><input name="description_en" value="{{ old('description_en', $item->description_en) }}" dir="ltr"></div>
+  </div>
+  @php($on = old('branches', $item->branch_ids ?: $branches->pluck('id')->all()))
+  <div class="field"><label>{{ __('admin.available_at') }}</label>
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      @foreach($branches as $b)
+        <label style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" name="branches[]" value="{{ $b->id }}" @checked(in_array($b->id, array_map('intval', (array) $on)))> {{ $b->tr('name') }}</label>
+      @endforeach
+    </div>
+    <small style="color:var(--muted)">{{ __('admin.available_hint') }}</small>
   </div>
   <div class="field"><label>{{ __('site.admin.price') }} ({{ __('site.aed') }})</label><input name="price" type="number" step="0.01" min="0" value="{{ old('price', $item->price) }}" dir="ltr"><small style="color:var(--muted)">{{ __('site.admin.price_hint') }}</small></div>
   <div class="field"><label>{{ __('site.admin.options') }}</label><small style="color:var(--muted)">{{ __('site.admin.option_hint') }}</small>

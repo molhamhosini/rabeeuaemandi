@@ -8,6 +8,7 @@
           'image' => $i->imageUrl(),
           'desc' => $i->tr('description'),
           'lead' => (int) $i->category?->lead_hours,
+          'branches' => $i->branchList(),
           'options' => $i->options->map(fn ($o) => ['id' => $o->id, 'name' => $o->tr('name'), 'price' => (float) $o->price])->values()->all(),
           'groups' => $i->addonGroups->map(fn ($g) => [
               'id' => $g->id, 'name' => $g->tr('name'), 'multiple' => $g->multiple, 'required' => $g->required,

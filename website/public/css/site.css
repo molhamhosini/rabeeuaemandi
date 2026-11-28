@@ -353,3 +353,10 @@ input[type=datetime-local]{font-family:inherit}
 .when-pick [data-day-f][hidden]+.field{grid-column:1/-1}
 .when-pick .field{margin:0}
 .when-pick select{width:100%}
+.paused-note{background:#FBE3E0;border-color:#F0B7AF;color:#8B1F1F;font-weight:700}
+.bpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0 6px;font-weight:700;color:var(--brown)}
+.bpick button{border:1px solid var(--line);background:var(--white);border-radius:999px;padding:7px 16px;font:inherit;font-weight:700;color:var(--brown);cursor:pointer}
+.bpick button.on{background:var(--brown);color:#fff;border-color:var(--brown)}
+.only-at{display:inline-block;margin:4px 0;font-size:.78rem;font-weight:700;color:#3C2E9B;background:#ECEAFB;border-radius:8px;padding:1px 8px}
+.dish[hidden]{display:none!important}
+.line.na{opacity:.6}.line .na-l{display:block;color:#B23A2A;font-weight:800}
