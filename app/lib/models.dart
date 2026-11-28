@@ -132,7 +132,11 @@ class Branch {
   final String whatsapp;
   final String? mapUrl;
   final double deliveryFee;
-  Branch(this.id, this.name, this.address, this.phones, this.whatsapp, this.mapUrl, this.deliveryFee);
+  /// Where the branch is (lat, lng), to send a map pin to the nearest branch.
+  final (double, double)? location;
+  /// The areas this branch delivers to.
+  final List<Area> areas;
+  Branch(this.id, this.name, this.address, this.phones, this.whatsapp, this.mapUrl, this.deliveryFee, [this.location, this.areas = const []]);
 
   factory Branch.fromJson(Map<String, dynamic> j) => Branch(
         j['id'] as int,
@@ -142,7 +146,17 @@ class Branch {
         '${j['whatsapp'] ?? ''}',
         j['map_url'] as String?,
         (j['delivery_fee'] as num?)?.toDouble() ?? 0,
+        j['location'] is Map ? ((j['location']['lat'] as num).toDouble(), (j['location']['lng'] as num).toDouble()) : null,
+        ((j['areas'] as List?) ?? []).map((a) => Area((a['id'] as num).toInt(), L10nText.fromJson(a['name']), (j['id'] as num).toInt())).toList(),
       );
+}
+
+/// A delivery area such as Al Khalidiyah, served by one branch.
+class Area {
+  final int id;
+  final L10nText name;
+  final int branchId;
+  const Area(this.id, this.name, this.branchId);
 }
 
 class AppConfig {
@@ -179,4 +193,58 @@ class PlacedOrder {
   /// Stripe or WhatsApp link to open; null for cash orders.
   final String? redirect;
   PlacedOrder(this.code, this.status, this.paymentStatus, this.total, this.redirect);
+}
+
+/// A signed-in customer (phone is shown as 050 123 4567).
+class Customer {
+  final int id;
+  final String phone;
+  final String? name;
+  final String? address;
+  final int? branchId;
+  final int ordersCount;
+  /// Saved map pin (lat, lng) from the last delivery, if any.
+  final (double, double)? location;
+  final int? areaId;
+  Customer(this.id, this.phone, this.name, this.address, this.branchId, this.ordersCount, [this.location, this.areaId]);
+
+  factory Customer.fromJson(Map j) => Customer(
+        (j['id'] as num).toInt(),
+        j['phone'] as String,
+        j['name'] as String?,
+        j['address'] as String?,
+        (j['branch_id'] as num?)?.toInt(),
+        (j['orders_count'] as num?)?.toInt() ?? 0,
+        j['location'] is Map ? ((j['location']['lat'] as num).toDouble(), (j['location']['lng'] as num).toDouble()) : null,
+        (j['area_id'] as num?)?.toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'area_id': areaId,
+        'id': id, 'phone': phone, 'name': name, 'address': address, 'branch_id': branchId, 'orders_count': ordersCount,
+        'location': location == null ? null : {'lat': location!.$1, 'lng': location!.$2},
+      };
+}
+
+/// Where the customer wants the order: a map pin, an area from the list, or pickup at a branch.
+class DeliveryPlace {
+  final String kind; // pin | area | pickup
+  final double? lat;
+  final double? lng;
+  final int? areaId;
+  final int? branchId;
+  const DeliveryPlace.pin(double this.lat, double this.lng) : kind = 'pin', areaId = null, branchId = null;
+  const DeliveryPlace.area(int this.areaId) : kind = 'area', lat = null, lng = null, branchId = null;
+  const DeliveryPlace.pickup(int this.branchId) : kind = 'pickup', lat = null, lng = null, areaId = null;
+  const DeliveryPlace._(this.kind, this.lat, this.lng, this.areaId, this.branchId);
+
+  factory DeliveryPlace.fromJson(Map j) => DeliveryPlace._(
+        j['kind'] as String,
+        (j['lat'] as num?)?.toDouble(),
+        (j['lng'] as num?)?.toDouble(),
+        (j['area_id'] as num?)?.toInt(),
+        (j['branch_id'] as num?)?.toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {'kind': kind, 'lat': lat, 'lng': lng, 'area_id': areaId, 'branch_id': branchId};
 }

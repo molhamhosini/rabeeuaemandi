@@ -46,4 +46,10 @@ return [
         'total' => 'Total', 'paid' => 'Paid', 'unpaid' => 'Not paid', 'thanks' => 'Thank you', 'print' => 'Print', 'close' => 'Close',
         'pay_cash' => 'Cash', 'pay_whatsapp' => 'WhatsApp', 'pay_card' => 'Card', 'customer_copy' => 'Customer copy', 'kitchen_copy' => 'Kitchen copy',
     ],
+    'signed_in_customer' => 'Signed-in customer',
+    'area' => 'Area',
+    'areas' => 'Delivery areas for this branch',
+    'areas_help' => 'One area per line: Arabic name | English name. Customers pick their area in the app and the order goes to this branch.',
+    'branch_lat' => 'Branch location: latitude',
+    'branch_lng' => 'Branch location: longitude',
 ];

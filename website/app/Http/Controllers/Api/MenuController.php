@@ -29,7 +29,7 @@ class MenuController extends Controller
 
     public function branches()
     {
-        return Branch::active()->get()->map(fn ($b) => [
+        return Branch::active()->with(['areas' => fn ($q) => $q->where('is_active', true)])->get()->map(fn ($b) => [
             'id' => $b->id,
             'slug' => $b->slug,
             'name' => ['ar' => $b->name_ar, 'en' => $b->name_en],
@@ -38,6 +38,9 @@ class MenuController extends Controller
             'whatsapp' => $b->whatsapp,
             'map_url' => $b->map_url,
             'delivery_fee' => (float) $b->delivery_fee,
+            'location' => $b->lat !== null ? ['lat' => (float) $b->lat, 'lng' => (float) $b->lng] : null,
+            // the areas this branch delivers to
+            'areas' => $b->areas->map(fn ($a) => ['id' => $a->id, 'name' => ['ar' => $a->name_ar, 'en' => $a->name_en]])->values(),
         ]);
     }
 

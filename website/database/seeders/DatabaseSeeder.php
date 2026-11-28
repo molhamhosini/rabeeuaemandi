@@ -129,6 +129,7 @@ class DatabaseSeeder extends Seeder
         foreach ($branches as $b) {
             Branch::updateOrCreate(['slug' => $b['slug']], $b + ['hours_ar' => 'يوميًا', 'hours_en' => 'Daily', 'delivery_fee' => 0]);
         }
+        \App\Support\DeliveryAreas::seed();
 
         $menu = json_decode(file_get_contents(database_path('data/menu.json')), true);
         foreach ($menu['categories'] as $ci => $c) {

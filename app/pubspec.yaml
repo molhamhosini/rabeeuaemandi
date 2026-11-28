@@ -39,6 +39,9 @@ dependencies:
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
   video_player: ^2.14.1
+  provider: ^6.1.5+1
+  google_maps_flutter: ^2.19.0
+  geolocator: ^14.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -49,6 +52,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -104,3 +108,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Native launch screen (shown by Android/iOS before Flutter starts), same look as SplashScreen.
+# Regenerate after changes: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#2A1C11"
+  image: assets/images/logo.png
+  android_12:
+    color: "#2A1C11"
+    image: assets/images/logo.png
+  web: false

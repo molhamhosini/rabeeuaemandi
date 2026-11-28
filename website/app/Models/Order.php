@@ -12,10 +12,20 @@ class Order extends Model
 
     public function branch() { return $this->belongsTo(Branch::class); }
 
+    public function area() { return $this->belongsTo(Area::class); }
+
+    public function customer() { return $this->belongsTo(Customer::class); }
+
     public function items() { return $this->hasMany(OrderItem::class); }
 
     // the link to an order uses the random code, so nobody can open other people's orders by counting
     public function getRouteKeyName(): string { return 'code'; }
+
+    /** Google Maps link to the customer's pin, or null when they did not drop one. */
+    public function getMapUrlAttribute(): ?string
+    {
+        return $this->lat !== null && $this->lng !== null ? 'https://maps.google.com/?q='.(float) $this->lat.','.(float) $this->lng : null;
+    }
 
     /** Order number people see and say on the phone: 00001, 00002, ... */
     public function getNumberAttribute(): string
@@ -40,6 +50,9 @@ class Order extends Model
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
             'fulfillment' => $this->fulfillment,
+            'address' => $this->address,
+            'area' => $this->area ? ['id' => $this->area->id, 'name' => ['ar' => $this->area->name_ar, 'en' => $this->area->name_en]] : null,
+            'location' => $this->lat !== null ? ['lat' => (float) $this->lat, 'lng' => (float) $this->lng] : null,
             'subtotal' => (float) $this->subtotal,
             'delivery_fee' => (float) $this->delivery_fee,
             'total' => (float) $this->total,

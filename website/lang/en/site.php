@@ -100,4 +100,14 @@ return [
         'hours_ar' => 'Hours (Arabic)', 'hours_en' => 'Hours (English)', 'delivery_fee' => 'Delivery fee', 'min_order' => 'Minimum order',
         'address_ar' => 'Address (Arabic)', 'address_en' => 'Address (English)', 'view_site' => 'View site', 'no_orders' => 'No orders yet',
     ],
+    'auth' => [
+        'bad_phone' => 'Enter a valid UAE mobile number, like 050 123 4567',
+        'wait' => 'Please wait :seconds seconds before asking for a new code',
+        'too_many' => 'Too many codes requested. Please try again in an hour',
+        'send_failed' => 'We could not send the code right now. Please try again shortly or call us',
+        'bad_code' => 'The code is wrong or has expired',
+    ],
+    'area_required' => 'Pick your area or set your location on the map',
+    'area_unknown' => 'This area is not in our list',
+    'area_other_branch' => ':area is served by :branch',
 ];

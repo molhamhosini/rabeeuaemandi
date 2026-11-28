@@ -19,6 +19,15 @@
     <div class="field"><label>{{ __('site.admin.min_order') }}</label><input name="min_order" type="number" step="1" value="{{ $b->min_order }}" dir="ltr"></div>
   </div>
   <div class="field"><label>{{ __('site.admin.map') }}</label><input name="map_url" value="{{ $b->map_url }}" dir="ltr"></div>
+  <div class="two">
+    <div class="field"><label>{{ __('admin.branch_lat') }}</label><input name="lat" value="{{ $b->lat }}" dir="ltr" placeholder="24.4890"></div>
+    <div class="field"><label>{{ __('admin.branch_lng') }}</label><input name="lng" value="{{ $b->lng }}" dir="ltr" placeholder="54.3560"></div>
+  </div>
+  <div class="field">
+    <label>{{ __('admin.areas') }}</label>
+    <textarea name="areas" rows="8" style="width:100%">{{ $b->areas->where('is_active', true)->map(fn ($a) => $a->name_ar.' | '.$a->name_en)->implode("\n") }}</textarea>
+    <small style="color:#7A6E60">{{ __('admin.areas_help') }}</small>
+  </div>
   <label style="display:flex;gap:8px;margin:6px 0 14px"><input type="checkbox" name="is_active" value="1" @checked($b->is_active)> {{ __('site.admin.active') }}</label>
   <button class="btn btn-primary">{{ __('site.admin.save') }}</button>
 </form>
