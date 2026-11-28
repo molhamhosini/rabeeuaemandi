@@ -19,6 +19,16 @@ class DatabaseSeeder extends Seeder
         'Mandi Chicken' => 'chicken-mandi-plate', 'Madhbi Chicken' => 'chicken-madhbi-plate', 'Madfoon Chicken' => 'chicken-madfoon-plate',
     ];
 
+    /** Photos for the "without rice" dishes: the same dish with the rice plate taken out, or, where the meat
+     *  sits on the rice in the only photo, a plate of the same meat without rice. */
+    public const NO_RICE_PHOTOS = [
+        'Suprem Fish' => 'fish-suprem-norice', 'Hamour Fish' => 'fish-hamour-norice', 'Salmon Fish' => 'fish-salmon-norice',
+        'Mukalkal Lamb' => 'lamb-mukalkal-norice', 'Burma Chicken' => 'chicken-burma-norice',
+        'Mandi Lamb' => 'lamb-madhbi-plate', 'Bukhari Lamb' => 'lamb-madhbi-plate', 'Hashi Lamb' => 'lamb-madhbi-plate',
+        'Haneez Lamb' => 'lamb-madhbi-plate', 'Tanoor Lamb' => 'lamb-madhbi-plate',
+        'Bukhari Chicken' => 'chicken-mandi-plate', 'Haneeth Chicken' => 'chicken-mandi-plate',
+    ];
+
     /** Lamb, chicken and fish meals also sold without rice, 8 AED less (the price of a rice plate). */
     public const NO_RICE_SECTIONS = ['lamb', 'chicken', 'fish'];
     public const NO_RICE_SKIP = ['Waslah Lamb', 'Head with rice', 'Harees Lamb', 'Whole Stuffed Chicken'];
@@ -125,7 +135,8 @@ class DatabaseSeeder extends Seeder
                     'description_ar' => $i['description_ar'] ?? null,
                     'description_en' => $i['description_en'] ?? null,
                     'price' => $i['price'],
-                    'image' => $this->image(self::PHOTOS[$i['photo_of'] ?? $i['name_en']] ?? $i['image']),
+                    'image' => $this->image((isset($i['photo_of']) ? self::NO_RICE_PHOTOS[$i['photo_of']] ?? null : null)
+                        ?? self::PHOTOS[$i['photo_of'] ?? $i['name_en']] ?? $i['image']),
                     'is_featured' => $i['featured'],
                     'sort' => $ii,
                 ]);
