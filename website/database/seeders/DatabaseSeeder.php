@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         'Yogurt Normal' => 'yogurt', 'Yogurt Cucumber' => 'yogurt', 'Cold Drinks' => 'cold-drinks',
         // the owner's fish photos show the fish with its rice plate, so they suit the meal with rice
         'Suprem Fish' => 'fish-suprem-plate', 'Hamour Fish' => 'fish-hamour-plate', 'Salmon Fish' => 'fish-salmon-plate',
+        'Kingfish' => 'fish-kingfish-plate', // printed-menu kingfish next to the rice plate from the salmon photo
     ];
 
     /** Dishes whose photo PHOTOS used to replace with a plate without rice (undone by migration 000700). */
@@ -27,7 +28,7 @@ class DatabaseSeeder extends Seeder
     /** Photos for the "without rice" dishes: the same dish with the rice plate taken out, or, where the meat
      *  sits on the rice in the only photo, a plate of the same meat without rice. */
     public const NO_RICE_PHOTOS = [
-        'Suprem Fish' => 'fish-suprem-norice', 'Hamour Fish' => 'fish-hamour-norice', 'Salmon Fish' => 'fish-salmon-norice',
+        'Suprem Fish' => 'fish-suprem-norice', 'Kingfish' => 'fish-kingfish', 'Hamour Fish' => 'fish-hamour-norice', 'Salmon Fish' => 'fish-salmon-norice',
         'Mukalkal Lamb' => 'lamb-mukalkal-norice', 'Burma Chicken' => 'chicken-burma-norice',
         'Madfoon Lamb' => 'lamb-madfoon-plate', 'Madhbi Lamb' => 'lamb-madhbi-plate', 'Zirbyan Lamb' => 'lamb-zirbyan-plate',
         'Burma Lamb' => 'lamb-burma-plate',
