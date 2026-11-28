@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
      *  printed-menu (PSD) picture; the owner's plates without rice go on their "without rice" twins below. */
     public const PHOTOS = [
         'Yogurt Normal' => 'yogurt', 'Yogurt Cucumber' => 'yogurt', 'Cold Drinks' => 'cold-drinks',
+        // the owner's fish photos show the fish with its rice plate, so they suit the meal with rice
+        'Suprem Fish' => 'fish-suprem-plate', 'Hamour Fish' => 'fish-hamour-plate', 'Salmon Fish' => 'fish-salmon-plate',
     ];
 
     /** Dishes whose photo PHOTOS used to replace with a plate without rice (undone by migration 000700). */
