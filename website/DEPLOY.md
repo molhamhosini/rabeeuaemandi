@@ -38,3 +38,20 @@
 ```bash
 php artisan test
 ```
+
+## Customer accounts, OTP and delivery areas (app)
+
+1. Copy the new code, then run `php artisan migrate --force` (adds customers, customer_otps,
+   customer_tokens, areas, and lat/lng/area_id columns; fills the first area lists). Never `--seed`.
+2. In `.env` set:
+   ```
+   OTP_DRIVER=msg91
+   MSG91_AUTH_KEY=...           # MSG91 dashboard > Authkey
+   MSG91_OTP_TEMPLATE_ID=...    # an approved OTP template (with the ##OTP## variable)
+   ```
+   Until then `OTP_DRIVER=log` writes codes to storage/logs/laravel.log (testing only).
+3. Google Maps key (Google Cloud console, enable "Maps SDK for Android", "Maps SDK for iOS",
+   "Maps JavaScript API"): Android `MAPS_API_KEY=...` in `app/android/local.properties`;
+   iOS `app/ios/Flutter/Maps.xcconfig` (see Maps.xcconfig.example); web: replace `MAPS_API_KEY`
+   in `app/web/index.html` before building. Restrict each key to the app / the domain.
+4. Delivery areas per branch: Admin > Branches (one per line, "Arabic | English").

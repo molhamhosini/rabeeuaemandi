@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
@@ -34,6 +35,9 @@ class AppState extends ChangeNotifier {
   List<Branch> branches = [];
   final List<CartLine> cart = [];
   final List<String> myOrders = [];
+  /// The signed-in customer, or null for a guest. The token is kept in the phone's storage.
+  Customer? customer;
+  bool get signedIn => customer != null;
   /// The branch the customer picked; dishes another branch does not make are hidden.
   int? branch;
 
@@ -47,6 +51,25 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<Area> get areas => branches.expand((b) => b.areas).toList();
+
+  /// The branch closest to a map pin (straight-line distance), or null when branches have no location.
+  int? nearestBranch((double, double) p) {
+    int? best;
+    var bestD = double.infinity;
+    for (final b in branches) {
+      final loc = b.location;
+      if (loc == null) continue;
+      final dLat = loc.$1 - p.$1, dLng = (loc.$2 - p.$2) * 0.91; // cos(24°) for longitude
+      final d = dLat * dLat + dLng * dLng;
+      if (d < bestD) {
+        bestD = d;
+        best = b.id;
+      }
+    }
+    return best;
+  }
+
   List<MenuItem> get featured => categories.expand((c) => c.items).where((i) => i.featured && i.availableAt(branch)).toList();
   int get count => cart.fold(0, (a, l) => a + l.qty);
   double get subtotal => cart.fold(0.0, (a, l) => a + l.total);
@@ -56,7 +79,11 @@ class AppState extends ChangeNotifier {
     lang = prefs.getString('lang') ?? 'ar';
     branch = prefs.getInt('branch');
     myOrders.addAll(prefs.getStringList('orders') ?? []);
+    api.token = prefs.getString('token');
+    final saved = prefs.getString('customer');
+    if (api.token != null && saved != null) customer = Customer.fromJson(jsonDecode(saved));
     await load();
+    if (api.token != null) refreshMe();
   }
 
   Future<void> load() async {
@@ -72,6 +99,57 @@ class AppState extends ChangeNotifier {
       error = '$e';
     }
     loading = false;
+    notifyListeners();
+  }
+
+  /// Signed in after the code was right: keep the token so the customer stays signed in.
+  Future<void> signedInAs(String token, Customer c) async {
+    api.token = token;
+    final p = await SharedPreferences.getInstance();
+    await p.setString('token', token);
+    await _setCustomer(c);
+    if (branch == null && c.branchId != null) await setBranch(c.branchId);
+  }
+
+  Future<void> _setCustomer(Customer c) async {
+    customer = c;
+    (await SharedPreferences.getInstance()).setString('customer', jsonEncode(c.toJson()));
+    notifyListeners();
+  }
+
+  /// Fetch the latest name/address; a refused token means the sign-in ended.
+  Future<void> refreshMe() async {
+    try {
+      await _setCustomer(await api.me(lang));
+    } on UnauthorizedException {
+      await _forget();
+    } catch (_) {
+      // offline: keep the saved copy
+    }
+  }
+
+  Future<void> updateProfile({String? name, String? address}) async {
+    await _setCustomer(await api.updateMe({'name': ?name, 'address': ?address}, lang));
+  }
+
+  Future<void> signOut() async {
+    try {
+      await api.logout(lang);
+    } catch (_) {}
+    await _forget();
+  }
+
+  Future<void> deleteAccount() async {
+    await api.deleteAccount(lang);
+    await _forget();
+  }
+
+  Future<void> _forget() async {
+    api.token = null;
+    customer = null;
+    final p = await SharedPreferences.getInstance();
+    await p.remove('token');
+    await p.remove('customer');
     notifyListeners();
   }
 
@@ -120,6 +198,8 @@ class AppState extends ChangeNotifier {
     required String notes,
     required String payment,
     String? scheduledAt,
+    (double, double)? location,
+    int? areaId,
   }) =>
       {
         'branch_id': branchId,
@@ -130,15 +210,17 @@ class AppState extends ChangeNotifier {
         'notes': notes,
         'payment_method': payment,
         if (scheduledAt != null) 'scheduled_at': scheduledAt,
+        if (location != null && fulfillment == 'delivery') ...{'lat': location.$1, 'lng': location.$2},
+        if (areaId != null && fulfillment == 'delivery') 'area_id': areaId,
         'items': cart.map((l) => {'item_id': l.item.id, 'option_id': l.option?.id, 'addon_ids': l.addons.map((a) => a.id).toList(), 'quantity': l.qty}).toList(),
       };
 
   String encodeCart() => jsonEncode(cart.map((l) => l.key).toList());
 }
 
-class AppScope extends InheritedNotifier<AppState> {
-  const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
-
-  static AppState of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
-  static AppState read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
+/// The app's state comes from `provider`: `AppScope.of(context)` rebuilds the widget when the
+/// state changes (context.watch), `AppScope.read(context)` reads it once (context.read).
+abstract final class AppScope {
+  static AppState of(BuildContext context) => context.watch<AppState>();
+  static AppState read(BuildContext context) => context.read<AppState>();
 }

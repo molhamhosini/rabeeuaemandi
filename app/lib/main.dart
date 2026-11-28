@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import 'api.dart';
 import 'app_state.dart';
+import 'screens/account_screen.dart';
 import 'screens/branches_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/home_screen.dart';
@@ -11,8 +13,7 @@ import 'theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final state = AppState(Api())..init();
-  runApp(AppScope(state: state, child: const RabeeApp()));
+  runApp(ChangeNotifierProvider(create: (_) => AppState(Api())..init(), child: const RabeeApp()));
 }
 
 class RabeeApp extends StatelessWidget {
@@ -74,6 +75,7 @@ class _ShellState extends State<Shell> {
         MenuScreen(initialCategory: menuCategory),
         const CartScreen(),
         const BranchesScreen(),
+        const AccountScreen(),
       ]);
     }
     return Scaffold(
@@ -90,6 +92,7 @@ class _ShellState extends State<Shell> {
             label: tr('cart', l),
           ),
           NavigationDestination(icon: const Icon(Icons.storefront_outlined), selectedIcon: const Icon(Icons.storefront), label: tr('branches', l)),
+          NavigationDestination(icon: const Icon(Icons.person_outline_rounded), selectedIcon: const Icon(Icons.person_rounded), label: tr('account', l)),
         ],
       ),
     );

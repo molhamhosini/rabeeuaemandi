@@ -84,6 +84,7 @@
   <div class="kv">
     <span>{{ __('admin.receipt.customer') }}</span><span>{{ $order->customer_name }}</span>
     <span>{{ __('admin.receipt.phone') }}</span><span dir="ltr" style="text-align:start">{{ $order->customer_phone }}</span>
+    @if($order->fulfillment === 'delivery' && $order->area)<span>{{ __('admin.area') }}</span><span>{{ $order->area->tr('name') }}</span>@endif
     @if($order->fulfillment === 'delivery' && $order->address)<span>{{ __('admin.address') }}</span><span>{{ $order->address }}</span>@endif
   </div>
   @unless($kitchen)

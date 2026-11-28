@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../strings.dart';
 import '../theme.dart';
+import 'auth_screen.dart';
 import 'checkout_screen.dart';
 import 'widgets.dart';
 
@@ -60,7 +61,11 @@ class CartScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutScreen())),
+                      // ordering needs an account (the code by SMS proves the number is the customer's)
+                      onPressed: () async {
+                        if (!await AuthScreen.open(context, reason: tr('sign_in_to_order', l)) || !context.mounted) return;
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutScreen()));
+                      },
                       child: Text('${tr('checkout', l)} · ${money(s.subtotal)} ${tr('aed', l)}'),
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -5,6 +6,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../strings.dart';
 import '../theme.dart';
+import 'location_picker.dart';
 import 'order_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -28,6 +30,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   DateTime? _at;
   bool _busy = false;
   String? _error;
+  /// Map pin for delivery (lat, lng).
+  (double, double)? _pin;
+  /// Delivery area picked from the list (decides the branch).
+  int? _area;
+  /// 'map' or 'area': how the customer tells us where to deliver.
+  String _placeBy = 'map';
+
+  @override
+  void initState() {
+    super.initState();
+    // fill in what the account already knows
+    final c = AppScope.read(context).customer;
+    if (c != null) {
+      _name.text = c.name ?? '';
+      _phone.text = c.phone;
+      _address.text = c.address ?? '';
+      _pin = c.location;
+      _area = c.areaId;
+      if (_pin == null && _area != null) _placeBy = 'area';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +108,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             if (_fulfillment == 'delivery') ...[
               const SizedBox(height: 12),
+              _placeCard(s, l),
+              const SizedBox(height: 10),
               TextFormField(controller: _address, decoration: InputDecoration(labelText: tr('address', l)), validator: req, maxLines: 2),
             ],
             const SizedBox(height: 12),
@@ -117,6 +142,91 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
   }
+
+  /// Map pin or area list. Both pick the branch: an area belongs to its branch, a pin goes to
+  /// the nearest branch.
+  Widget _placeCard(AppState s, String l) {
+    final areas = s.areas;
+    if (_area != null && !areas.any((a) => a.id == _area)) _area = null;
+    final branchOf = _placeBy == 'area'
+        ? areas.where((a) => a.id == _area).map((a) => a.branchId).firstOrNull
+        : (_pin != null ? s.nearestBranch(_pin!) : null);
+    final branchName = s.branches.where((b) => b.id == branchOf).map((b) => b.name.of(l)).firstOrNull;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text(tr('where_deliver', l), style: const TextStyle(fontWeight: FontWeight.w800, color: Brand.brown)),
+      const SizedBox(height: 8),
+      SegmentedButton<String>(
+        segments: [
+          ButtonSegment(value: 'map', icon: const Icon(Icons.map_outlined), label: Text(tr('by_map', l))),
+          ButtonSegment(value: 'area', icon: const Icon(Icons.list_alt), label: Text(tr('by_area', l))),
+        ],
+        selected: {_placeBy},
+        showSelectedIcon: false,
+        onSelectionChanged: (v) => setState(() {
+          _placeBy = v.first;
+          _syncBranch(s);
+        }),
+      ),
+      const SizedBox(height: 10),
+      if (_placeBy == 'map')
+        _pinTile(s, l)
+      else
+        DropdownButtonFormField<int>(
+          key: const Key('area'),
+          initialValue: _area,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: tr('area', l)),
+          validator: (v) => v == null ? tr('area_or_map', l) : null,
+          items: [
+            for (final b in s.branches) ...[
+              DropdownMenuItem<int>(enabled: false, value: -b.id, child: Text(b.name.of(l), style: const TextStyle(color: Brand.gold2, fontWeight: FontWeight.w800))),
+              for (final a in b.areas) DropdownMenuItem<int>(value: a.id, child: Padding(padding: const EdgeInsetsDirectional.only(start: 12), child: Text(a.name.of(l)))),
+            ],
+          ],
+          onChanged: (v) => setState(() {
+            _area = v;
+            _syncBranch(s);
+          }),
+        ),
+      if (branchName != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(tr('served_by', l).replaceAll(':b', branchName), style: const TextStyle(color: Brand.gold2, fontWeight: FontWeight.w700)),
+        ),
+    ]);
+  }
+
+  /// Point the order at the branch that serves the chosen area or pin.
+  void _syncBranch(AppState s) {
+    if (_fulfillment != 'delivery') return;
+    final id = _placeBy == 'area'
+        ? s.areas.where((a) => a.id == _area).map((a) => a.branchId).firstOrNull
+        : (_pin != null ? s.nearestBranch(_pin!) : null);
+    if (id != null && id != _branch) {
+      _branch = id;
+      s.setBranch(id);
+    }
+  }
+
+  Widget _pinTile(AppState s, String l) => Material(
+        color: _pin != null ? const Color(0xFFEFF7EC) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: _pin != null ? const Color(0xFF7FB36A) : Brand.line, width: 1.5)),
+        child: ListTile(
+          key: const Key('pin'),
+          leading: Icon(_pin != null ? Icons.check_circle : Icons.map_outlined, color: _pin != null ? const Color(0xFF3E8A2E) : Brand.gold2),
+          title: Text(tr(_pin != null ? 'location_set' : 'set_on_map', l), style: const TextStyle(fontWeight: FontWeight.w700)),
+          trailing: Text(_pin != null ? tr('change', l) : '', style: const TextStyle(color: Brand.gold2, fontWeight: FontWeight.w700)),
+          onTap: () async {
+            final p = await LocationPicker.open(context, initial: _pin == null ? null : LatLng(_pin!.$1, _pin!.$2));
+            if (p != null) {
+              setState(() {
+                _pin = (p.latitude, p.longitude);
+                _syncBranch(s);
+              });
+            }
+          },
+        ),
+      );
 
   static DateTime _abuDhabiNow() {
     final u = DateTime.now().toUtc().add(const Duration(hours: 4));
@@ -227,6 +337,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _submit(AppState s) async {
     if (!_form.currentState!.validate() || _branch == null) return;
+    if (_fulfillment == 'delivery' && _placeBy == 'map' && _pin == null) {
+      return setState(() => _error = tr('area_or_map', s.lang));
+    }
     final later = _later || s.leadHours > 0 || !_openNow(s.config);
     setState(() {
       _busy = true;
@@ -243,10 +356,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           notes: _notes.text.trim(),
           payment: _payment!,
           scheduledAt: later && _at != null ? _fmt(_at!) : null,
+          location: _placeBy == 'map' ? _pin : null,
+          areaId: _placeBy == 'area' ? _area : null,
         ),
         s.lang,
       );
       await s.rememberOrder(order.code);
+      if (s.signedIn) s.refreshMe(); // the server saved the name, address and pin
       s.clearCart();
       // WhatsApp opens the chat with the order typed out; card opens Stripe's secure payment page;
       // a cash order is already with the restaurant.

@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
         $middleware->api(append: [\App\Http\Middleware\SetLocale::class]);
-        $middleware->alias(['admin' => \App\Http\Middleware\AdminOnly::class]);
+        $middleware->alias(['admin' => \App\Http\Middleware\AdminOnly::class, 'customer' => \App\Http\Middleware\CustomerAuth::class]);
         $middleware->validateCsrfTokens(except: ['stripe/webhook']);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
     })

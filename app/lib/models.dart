@@ -132,7 +132,11 @@ class Branch {
   final String whatsapp;
   final String? mapUrl;
   final double deliveryFee;
-  Branch(this.id, this.name, this.address, this.phones, this.whatsapp, this.mapUrl, this.deliveryFee);
+  /// Where the branch is (lat, lng), to send a map pin to the nearest branch.
+  final (double, double)? location;
+  /// The areas this branch delivers to.
+  final List<Area> areas;
+  Branch(this.id, this.name, this.address, this.phones, this.whatsapp, this.mapUrl, this.deliveryFee, [this.location, this.areas = const []]);
 
   factory Branch.fromJson(Map<String, dynamic> j) => Branch(
         j['id'] as int,
@@ -142,7 +146,17 @@ class Branch {
         '${j['whatsapp'] ?? ''}',
         j['map_url'] as String?,
         (j['delivery_fee'] as num?)?.toDouble() ?? 0,
+        j['location'] is Map ? ((j['location']['lat'] as num).toDouble(), (j['location']['lng'] as num).toDouble()) : null,
+        ((j['areas'] as List?) ?? []).map((a) => Area((a['id'] as num).toInt(), L10nText.fromJson(a['name']), (j['id'] as num).toInt())).toList(),
       );
+}
+
+/// A delivery area such as Al Khalidiyah, served by one branch.
+class Area {
+  final int id;
+  final L10nText name;
+  final int branchId;
+  const Area(this.id, this.name, this.branchId);
 }
 
 class AppConfig {
@@ -179,4 +193,35 @@ class PlacedOrder {
   /// Stripe or WhatsApp link to open; null for cash orders.
   final String? redirect;
   PlacedOrder(this.code, this.status, this.paymentStatus, this.total, this.redirect);
+}
+
+/// A signed-in customer (phone is shown as 050 123 4567).
+class Customer {
+  final int id;
+  final String phone;
+  final String? name;
+  final String? address;
+  final int? branchId;
+  final int ordersCount;
+  /// Saved map pin (lat, lng) from the last delivery, if any.
+  final (double, double)? location;
+  final int? areaId;
+  Customer(this.id, this.phone, this.name, this.address, this.branchId, this.ordersCount, [this.location, this.areaId]);
+
+  factory Customer.fromJson(Map j) => Customer(
+        (j['id'] as num).toInt(),
+        j['phone'] as String,
+        j['name'] as String?,
+        j['address'] as String?,
+        (j['branch_id'] as num?)?.toInt(),
+        (j['orders_count'] as num?)?.toInt() ?? 0,
+        j['location'] is Map ? ((j['location']['lat'] as num).toDouble(), (j['location']['lng'] as num).toDouble()) : null,
+        (j['area_id'] as num?)?.toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'area_id': areaId,
+        'id': id, 'phone': phone, 'name': name, 'address': address, 'branch_id': branchId, 'orders_count': ordersCount,
+        'location': location == null ? null : {'lat': location!.$1, 'lng': location!.$2},
+      };
 }

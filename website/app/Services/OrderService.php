@@ -23,6 +23,10 @@ class OrderService
             'fulfillment' => 'required|in:delivery,pickup',
             'address' => 'required_if:fulfillment,delivery|nullable|string|max:300',
             'notes' => 'nullable|string|max:500',
+            'area_id' => 'nullable|integer|exists:areas,id',
+            // map pin from the app; must be inside the UAE
+            'lat' => 'nullable|numeric|between:22,26.5|required_with:lng',
+            'lng' => 'nullable|numeric|between:51,56.5|required_with:lat',
             // local Abu Dhabi time from the form, e.g. 2026-11-28T19:30; empty = as soon as possible
             'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
             'payment_method' => 'required|in:cash,card,whatsapp',
@@ -132,8 +136,19 @@ class OrderService
         }
 
         $branch = Branch::where('is_active', true)->findOrFail($data['branch_id']);
+        $area = null;
+        if ($data['fulfillment'] === 'delivery') {
+            // the area decides the branch: Al Danah delivers in the city, New Shahamah around Shahamah
+            if (! empty($data['area_id'])) {
+                $area = \App\Models\Area::where('is_active', true)->find($data['area_id'])
+                    ?? throw ValidationException::withMessages(['area_id' => __('site.area_unknown')]);
+                if ($area->branch_id !== $branch->id) {
+                    throw ValidationException::withMessages(['area_id' => __('site.area_other_branch', ['area' => $area->tr('name'), 'branch' => $area->branch->tr('name')])]);
+                }
+            }
+        }
 
-        return DB::transaction(function () use ($data, $branch, $source) {
+        return DB::transaction(function () use ($data, $branch, $source, $area) {
             $lines = [];
             $subtotal = 0;
             $lead = 0;
@@ -174,10 +189,14 @@ class OrderService
             $order = Order::create([
                 'code' => strtoupper(Str::random(3)).now()->format('dHis'),
                 'branch_id' => $branch->id,
+                'customer_id' => $data['customer_id'] ?? null,
                 'customer_name' => $data['customer_name'],
                 'customer_phone' => $data['customer_phone'],
                 'fulfillment' => $data['fulfillment'],
                 'address' => $data['address'] ?? null,
+                'area_id' => $area?->id,
+                'lat' => $data['fulfillment'] === 'delivery' ? ($data['lat'] ?? null) : null,
+                'lng' => $data['fulfillment'] === 'delivery' ? ($data['lng'] ?? null) : null,
                 'notes' => $data['notes'] ?? null,
                 'scheduled_at' => $scheduled,
                 'subtotal' => $subtotal,
@@ -264,8 +283,9 @@ class OrderService
         $lines[] = ($ar ? 'الاسم: ' : 'Name: ').$order->customer_name;
         $lines[] = ($ar ? 'الهاتف: ' : 'Phone: ').$order->customer_phone;
         $lines[] = $order->fulfillment === 'delivery'
-            ? ($ar ? 'توصيل إلى: ' : 'Deliver to: ').$order->address
+            ? ($ar ? 'توصيل إلى: ' : 'Deliver to: ').($order->area ? ($ar ? $order->area->name_ar : $order->area->name_en).' - ' : '').$order->address
             : ($ar ? 'استلام من المطعم' : 'Pickup from restaurant');
+        if ($order->map_url) $lines[] = ($ar ? 'الموقع على الخريطة: ' : 'Location on map: ').$order->map_url;
         if ($order->notes) $lines[] = ($ar ? 'ملاحظات: ' : 'Notes: ').$order->notes;
 
         return 'https://wa.me/'.$order->branch->whatsapp.'?text='.rawurlencode(implode("\n", $lines));

@@ -42,14 +42,15 @@
         <dt>{{ __('admin.receipt.phone') }}</dt><dd dir="ltr" style="text-align:start">{{ $order->customer_phone }}</dd>
         <dt>{{ __('admin.receipt.branch') }}</dt><dd>{{ $order->branch->tr('name') }}</dd>
         <dt>{{ __('admin.placed') }}</dt><dd>{{ $order->created_at->timezone(\App\Services\OrderService::TZ)->format('d/m/Y h:i A') }}</dd>
-        <dt>{{ $order->fulfillment === 'delivery' ? __('admin.delivery') : __('admin.pickup') }}</dt><dd>{{ $order->fulfillment === 'delivery' ? $order->address : '—' }}</dd>
+        <dt>{{ $order->fulfillment === 'delivery' ? __('admin.delivery') : __('admin.pickup') }}</dt><dd>@if($order->fulfillment === 'delivery')@if($order->area)<b>{{ $order->area->tr('name') }}</b> · @endif{{ $order->address }}@else — @endif</dd>
         @if($order->notes)<dt>{{ __('admin.notes') }}</dt><dd style="color:#8A4B00">{{ $order->notes }}</dd>@endif
-        <dt>{{ __('site.admin.source') }}</dt><dd>{{ $order->source === 'app' ? 'App' : 'Web' }}</dd>
+        <dt>{{ __('site.admin.source') }}</dt><dd>{{ $order->source === 'app' ? 'App' : 'Web' }}@if($order->customer_id) · {{ __('admin.signed_in_customer') }}@endif</dd>
       </dl>
       <div class="acts-row" style="margin-top:14px">
         <a class="btn-s ghost" href="tel:{{ $order->customer_phone }}">📞 {{ __('admin.call') }}</a>
         <a class="btn-s ghost" href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener">💬 {{ __('admin.whatsapp') }}</a>
-        @if($order->fulfillment === 'delivery' && $order->address)<a class="btn-s ghost" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($order->address) }}" target="_blank" rel="noopener">📍 {{ __('admin.map') }}</a>@endif
+        @if($order->map_url)<a class="btn-s ghost" href="{{ $order->map_url }}" target="_blank" rel="noopener">📍 {{ __('admin.map') }}</a>
+        @elseif($order->fulfillment === 'delivery' && $order->address)<a class="btn-s ghost" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($order->address) }}" target="_blank" rel="noopener">📍 {{ __('admin.map') }}</a>@endif
       </div>
     </div>
     <form class="card" method="post" action="{{ route('admin.orders.update', $order) }}">
