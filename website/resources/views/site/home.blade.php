@@ -85,6 +85,19 @@
   </div>
 </section>
 
+<section class="section van-sec">
+  <div class="wrap van">
+    <div class="van-copy">
+      <span class="eyebrow">{{ __('site.free_delivery') }}</span>
+      <h2>{{ __('site.van_title') }}</h2>
+      <i class="orn start"></i>
+      <p>{{ __('site.van_text') }}</p>
+      <a class="btn btn-primary" href="{{ route('menu') }}">{{ __('site.order_now') }}</a>
+    </div>
+    <figure class="van-ph"><img src="{{ asset('images/brand/delivery-van.webp') }}" alt="{{ __('site.van_alt') }}" loading="lazy" width="1600" height="658"></figure>
+  </div>
+</section>
+
 <section class="strip">
   <div class="gallery">
     @foreach(['hero-chicken', 'hero-whole-lamb', 'hero-fattoush', 'chicken-stuffed', 'lamb-mukalkal', 'fish-suprem'] as $g)

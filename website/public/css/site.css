@@ -360,3 +360,9 @@ input[type=datetime-local]{font-family:inherit}
 .only-at{display:inline-block;margin:4px 0;font-size:.78rem;font-weight:700;color:#3C2E9B;background:#ECEAFB;border-radius:8px;padding:1px 8px}
 .dish[hidden]{display:none!important}
 .line.na{opacity:.6}.line .na-l{display:block;color:#B23A2A;font-weight:800}
+.van{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;align-items:center}
+.van-copy h2{font-size:clamp(1.8rem,3.4vw,2.5rem);margin-top:6px}
+.van-copy p{color:var(--muted);font-size:1.08rem;margin:18px 0 22px}
+.van-ph{margin:0;border-radius:var(--radius);overflow:hidden;background:#DCDCDC;box-shadow:var(--shadow-sm)}
+.van-ph img{display:block;width:100%;height:auto}
+@media (max-width:860px){.van{grid-template-columns:1fr;gap:22px}.van-ph{order:-1}}

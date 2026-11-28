@@ -72,6 +72,7 @@ return [
     'only_at' => 'Only at :branch',
     'pick_branch' => 'Choose branch',
     'unavailable_here' => 'Not at this branch',
+    'van_title' => 'Delivered to your door', 'van_text' => 'Our own vans bring your order hot from Al Danah and New Shahamah, with free delivery.', 'van_alt' => 'Rabee Al Emarat delivery van',
     'card_unavailable' => 'Card payment is not available right now',
     'order' => [
         'title' => 'Order', 'thanks' => 'Thank you for your order!', 'paid' => 'Payment received. The kitchen is preparing your order.',

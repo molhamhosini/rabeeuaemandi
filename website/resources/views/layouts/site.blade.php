@@ -15,7 +15,7 @@
 <meta property="og:image" content="{{ asset('images/photos/hero-chicken.webp') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=7">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}?v=8">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="{{ $rtl ? 'ar' : 'en' }}">
